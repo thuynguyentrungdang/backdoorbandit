@@ -124,7 +124,7 @@ namespace BackdoorBandit
         }
         private static void TryPlaceC4OnDoor(Door door, Player player)
         {
-            var itemFactory = Singleton<ItemFactory>.Instance;
+            var itemFactory = Singleton<ItemFactoryClass>.Instance;
             var c4Item = itemFactory.CreateItem(MongoID.Generate(), C4ExplosiveId, null);
 
             Transform lockTransform = door.transform.Find("Lock");
@@ -197,7 +197,7 @@ namespace BackdoorBandit
             if (foundItem == null) return;
 
             var traderController = (TraderControllerClass)foundItem.Parent.GetOwner();
-            var discardResult = InteractionsHandlerClass.Discard(foundItem, traderController, false, false);
+            var discardResult = InteractionsHandlerClass.Discard(foundItem, traderController, false);
 
             if (discardResult.Error != null)
             {
@@ -320,7 +320,7 @@ namespace BackdoorBandit
                                 float damageMultiplier = Mathf.Clamp01(1 - distance / explosionRadius);
                                 float damageAmount = baseDamage * damageMultiplier;
 
-                                DamageInfo damageInfo = new DamageInfo
+                                DamageInfoStruct damageInfo = new DamageInfoStruct
                                 {
                                     DamageType = EDamageType.Explosion,
                                     Damage = damageAmount,
