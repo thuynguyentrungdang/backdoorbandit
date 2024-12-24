@@ -96,7 +96,7 @@ namespace BackdoorBandit
             {
                 if (hitpoints.hitpoints <= 0)
                 {
-                    var carTrunk = entity.GetComponentInParent<Trunk>();
+                    Trunk carTrunk = entity.GetComponentInParent<Trunk>();
                     OpenDoorIfNotAlreadyOpen(carTrunk, damageInfo.Player.AIData.Player, EInteractionType.Open);
                 }
             });
@@ -113,7 +113,7 @@ namespace BackdoorBandit
             {
                 if (hitpoints.hitpoints <= 0)
                 {
-                    var lootContainer = entity.GetComponentInParent<LootableContainer>();
+                    LootableContainer lootContainer = entity.GetComponentInParent<LootableContainer>();
                     OpenDoorIfNotAlreadyOpen(lootContainer, damageInfo.Player.AIData.Player, EInteractionType.Open);
                 }
             });
@@ -130,7 +130,7 @@ namespace BackdoorBandit
             {
                 if (hitpoints.hitpoints <= 0)
                 {
-                    var door = entity.GetComponentInParent<Door>();
+                    Door door = entity.GetComponentInParent<Door>();
                     OpenDoorIfNotAlreadyOpen(door, damageInfo.Player.AIData.Player, EInteractionType.Breach);
                 }
             });
@@ -138,7 +138,7 @@ namespace BackdoorBandit
 
         internal static void HandleDamage(DamageInfoStruct damageInfo, BallisticCollider collider, ref bool validDamage, string entityName, Action<Hitpoints, GameObject> onHitpointsZero)
         {
-            var hitpoints = collider.GetComponentInParent<Hitpoints>() as Hitpoints;
+            Hitpoints hitpoints = collider.GetComponentInParent<Hitpoints>() as Hitpoints;
 
             if (validDamage)
             {
