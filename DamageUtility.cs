@@ -43,7 +43,6 @@ namespace BackdoorBandit
             DoorBreachComponent.Logger.LogDebug($"isValidLockHit: {isValidLockHit(damageInfo)}");
             DoorBreachComponent.Logger.LogDebug($"isRoundValid: {isRoundValid(bulletTemplate)}");
             DoorBreachComponent.Logger.LogDebug($"weapon used: {damageInfo.Weapon.LocalizedName()}, id: {damageInfo.Weapon.TemplateId}");
-            DoorBreachComponent.Logger.LogDebug($"validWeapons Contains weapon tpl id: {validWeapons.Contains(weaponID).ToString()}");
 #endif
 
             //check if weapon is a shotgun and material type is metal
