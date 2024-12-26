@@ -27,7 +27,7 @@ namespace BackdoorBandit.Patches
                     BackdoorBandit.ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
                 }),
                 Disabled = (!door.IsBreachAngle(owner.Player.Position) || !BackdoorBandit.ExplosiveBreachComponent.IsValidDoorState(door) ||
-                            !BackdoorBandit.ExplosiveBreachComponent.hasC4Explosives(owner.Player) || !door.Operatable || !door.CanBeBreached)
+                            !BackdoorBandit.ExplosiveBreachComponent.hasC4Explosives(owner.Player))
             };
 
             __result.Actions.Add(breachC4);

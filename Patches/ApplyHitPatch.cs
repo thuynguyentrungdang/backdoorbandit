@@ -131,16 +131,6 @@ namespace BackdoorBandit
                 if (hitpoints.hitpoints <= 0)
                 {
                     Door door = entity.GetComponentInParent<Door>();
-
-                    // If a door is deemed "Unbreachable" (i.e. a door that is not supposed to be opened), don't open it
-                    if (!door.CanBeBreached)
-                    {
-#if DEBUG
-                        DoorBreachComponent.Logger.LogDebug("Encountered unbreachable door. This door is not supposed to be opened."); 
-#endif
-                        return;
-                    }
-
                     OpenDoorIfNotAlreadyOpen(door, damageInfo.Player.AIData.Player, EInteractionType.Breach);
                 }
             });
