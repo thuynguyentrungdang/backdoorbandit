@@ -197,7 +197,7 @@ namespace BackdoorBandit
             if (foundItem == null) return;
 
             TraderControllerClass traderController = (TraderControllerClass)foundItem.Parent.GetOwner();
-            GStruct446<GClass3129> discardResult = InteractionsHandlerClass.Discard(foundItem, traderController, false);
+            GStruct455<GClass3200> discardResult = InteractionsHandlerClass.Discard(foundItem, traderController, false);
 
             if (discardResult.Error != null)
             {

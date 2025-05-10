@@ -128,9 +128,17 @@ namespace BackdoorBandit
 
             HandleDamage(damageInfo, collider, ref validDamage, "Door", (hitpoints, entity) =>
             {
+                WorldInteractiveObject door = entity.GetComponentInParent<WorldInteractiveObject>();
+
+#if DEBUG
+                DoorBreachComponent.Logger.LogDebug("[Door info]");
+                DoorBreachComponent.Logger.LogDebug($"KeyId: {door.KeyId}");
+                DoorBreachComponent.Logger.LogDebug($"DoorState: {door.DoorState}");
+                DoorBreachComponent.Logger.LogDebug($"InitialDoorState: {door.InitialDoorState}");
+#endif
+
                 if (hitpoints.hitpoints <= 0)
                 {
-                    Door door = entity.GetComponentInParent<Door>();
                     OpenDoorIfNotAlreadyOpen(door, damageInfo.Player.AIData.Player, EInteractionType.Breach);
                 }
             });
@@ -187,7 +195,7 @@ namespace BackdoorBandit
         }
 
 
-        #endregion
+#endregion
 
 
 

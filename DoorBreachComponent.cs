@@ -173,8 +173,13 @@ namespace BackdoorBandit
             return true;
         }
 
-        private bool IsValidDoorState(Door door) =>
-            door.DoorState == EDoorState.Shut || door.DoorState == EDoorState.Locked || door.DoorState == EDoorState.Breaching || door.DoorState == EDoorState.Open;
+        private bool IsValidDoorState(Door door)
+        {
+            if(door.DoorState == EDoorState.Shut || door.DoorState == EDoorState.Locked || door.DoorState == EDoorState.Breaching || door.DoorState == EDoorState.Open)
+                return true;
+
+            return false;
+        }
 
         private bool IsValidContainerState(LootableContainer container) =>
             container.DoorState == EDoorState.Shut || container.DoorState == EDoorState.Locked || container.DoorState == EDoorState.Breaching;
