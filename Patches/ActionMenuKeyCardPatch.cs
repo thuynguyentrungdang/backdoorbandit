@@ -10,7 +10,7 @@ namespace BackdoorBandit.Patches
 {
     internal class ActionMenuKeyCardPatch : ModulePatch
     {
-        protected override MethodBase GetTargetMethod() => typeof(GetActionsClass).GetMethod(nameof(GetActionsClass.smethod_12));
+        protected override MethodBase GetTargetMethod() => typeof(GetActionsClass).GetMethod(nameof(GetActionsClass.smethod_13));
 
 
         // Check if an action is already added. Hopefully door's action takes precedence
