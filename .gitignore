@@ -361,7 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
 /BackdoorBandit.csproj
-BackdoorBandit1.11.0-debug.7z
 dist/
 build.ps1
+**.7z
