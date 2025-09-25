@@ -13,7 +13,7 @@ using UnityEngine;
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable IDE0007 // Use implicit type
 
-namespace BackdoorBandit
+namespace DoorBreach
 {
     internal class DoorBreachComponent : MonoBehaviour
     {

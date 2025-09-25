@@ -5,7 +5,7 @@ using EFT;
 using EFT.Interactive;
 using DoorBreach;
 
-namespace BackdoorBandit.Patches
+namespace DoorBreach.Patches
 {
     internal class ActionMenuDoorPatch : ModulePatch
     {
@@ -24,10 +24,10 @@ namespace BackdoorBandit.Patches
                 Name = "Plant Explosive",
                 Action = new Action(() =>
                 {
-                    BackdoorBandit.ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
+                    DoorBreach.ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
                 }),
-                Disabled = (!door.IsBreachAngle(owner.Player.Position) || !BackdoorBandit.ExplosiveBreachComponent.IsValidDoorState(door) ||
-                            !BackdoorBandit.ExplosiveBreachComponent.hasC4Explosives(owner.Player))
+                Disabled = (!door.IsBreachAngle(owner.Player.Position) || !DoorBreach.ExplosiveBreachComponent.IsValidDoorState(door) ||
+                            !DoorBreach.ExplosiveBreachComponent.hasC4Explosives(owner.Player))
             };
 
             __result.Actions.Add(breachC4);

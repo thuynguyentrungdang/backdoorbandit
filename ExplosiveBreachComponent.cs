@@ -12,7 +12,7 @@ using Systems.Effects;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace BackdoorBandit
+namespace DoorBreach
 {
     internal class ExplosiveBreachComponent : MonoBehaviour
     {
@@ -51,8 +51,8 @@ namespace BackdoorBandit
             effectsInstance = Singleton<Effects>.Instance;
 
             // Preload Audio Clips
-            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "/dvize.BackdoorBandit/Beep.mp3", true));
-            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "/dvize.BackdoorBandit/FinalBeepTone.mp3", false));
+            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "/Beep.mp3", true));
+            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "/FinalBeepTone.mp3", false));
         }
 
         private IEnumerator LoadAudioClip(string filePath, bool isBeepClip)
@@ -62,7 +62,7 @@ namespace BackdoorBandit
             {
                 yield return uwr.SendWebRequest();
 
-                if (uwr.isNetworkError || uwr.isHttpError)
+                if (uwr.result != UnityWebRequest.Result.Success)
                 {
                     Logger.LogError($"Error loading audio clip: {uwr.error}");
                 }
@@ -136,7 +136,7 @@ namespace BackdoorBandit
             }
             catch (Exception ex)
             {
-                //Logger.LogError($"Failed to access door handle: {ex.Message}");
+                Logger.LogError($"Failed to access door handle: {ex.Message}");
             }
 
             Component lockComponent = door.gameObject.GetComponent("Lock");

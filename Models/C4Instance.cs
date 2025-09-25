@@ -1,7 +1,7 @@
 ﻿using EFT.Interactive;
 using UnityEngine;
 
-namespace BackdoorBandit
+namespace DoorBreach
 {
     public class C4Instance
     {

@@ -5,7 +5,7 @@ using Koenigz.PerfectCulling;
 using Koenigz.PerfectCulling.EFT;
 using UnityEngine;
 
-namespace BackdoorBandit.Patches
+namespace DoorBreach.Patches
 {
     internal class PerfectCullingNullRefPatch : ModulePatch
     {

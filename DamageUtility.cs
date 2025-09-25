@@ -8,7 +8,7 @@ using EFT.Interactive;
 using EFT.InventoryLogic;
 using UnityEngine;
 
-namespace BackdoorBandit
+namespace DoorBreach
 {
     internal static class DamageUtility
     {

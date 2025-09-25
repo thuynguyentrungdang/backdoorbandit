@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace BackdoorBandit
+namespace DoorBreach
 {
     internal class Hitpoints : MonoBehaviour
     {
