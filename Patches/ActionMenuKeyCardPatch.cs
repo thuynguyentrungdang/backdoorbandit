@@ -36,7 +36,7 @@ namespace DoorBreach.Patches
                     DoorBreach.ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
                 }),
                 Disabled = (!door.IsBreachAngle(owner.Player.Position) || !DoorBreach.ExplosiveBreachComponent.IsValidDoorState(door) ||
-                            !DoorBreach.ExplosiveBreachComponent.hasC4Explosives(owner.Player))
+                            !DoorBreach.ExplosiveBreachComponent.HasC4Explosives(owner.Player))
             });
         }
     }

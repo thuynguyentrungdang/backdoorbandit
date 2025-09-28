@@ -51,8 +51,8 @@ namespace DoorBreach
             effectsInstance = Singleton<Effects>.Instance;
 
             // Preload Audio Clips
-            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "/audio/Beep.mp3", true));
-            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "/audio/FinalBeepTone.mp3", false));
+            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "\\DoorBreach\\audio\\Beep.mp3", true));
+            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "\\DoorBreach\\audio\\FinalBeepTone.mp3", false));
         }
 
         private IEnumerator LoadAudioClip(string filePath, bool isBeepClip)
@@ -77,7 +77,7 @@ namespace DoorBreach
                 }
             }
         }
-        internal static bool hasC4Explosives(Player player)
+        internal static bool HasC4Explosives(Player player)
         {
             // Search playerItems for first c4 explosive
             Item foundItem = player.Inventory.GetPlayerItems(EPlayerItems.Equipment).FirstOrDefault(x => x.TemplateId == C4ExplosiveId);
@@ -159,7 +159,7 @@ namespace DoorBreach
             {
                 // If no lock component or door handle, default to the door's center position
 #if DEBUG
-        Logger.LogInfo("Lock component and Door Handle not found. Defaulting to door center");
+                Logger.LogInfo("Lock component and Door Handle not found. Defaulting to door center");
 #endif
                 targetTransform = door.transform;
             }

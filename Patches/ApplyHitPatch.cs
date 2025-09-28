@@ -59,34 +59,20 @@ namespace DoorBreach
 
         private static void HandleDamageForEntity(DamageInfoStruct damageInfo, BallisticCollider collider)
         {
-            bool isCarTrunk = false;
-            bool isLootableContainer = false;
-            bool isDoor = false;
-            bool hasHitPoints = false;
+            if (!collider) return; // Unity null-safe check
+
             bool validDamage = DoorBreachPlugin.PlebMode.Value || false;
 
-            if (collider != null)
-            {
-                isCarTrunk = collider.GetComponentInParent<Trunk>() != null;
-                isLootableContainer = collider.GetComponentInParent<LootableContainer>() != null;
-                isDoor = collider.GetComponentInParent<Door>() != null;
-                hasHitPoints = collider.GetComponentInParent<Hitpoints>() != null;
-            }
+            bool isCarTrunk = collider.GetComponentInParent<Trunk>() != null;
+            bool isLootableContainer = collider.GetComponentInParent<LootableContainer>() != null;
+            bool isDoor = collider.GetComponentInParent<Door>() != null;
+            bool hasHitPoints = collider.GetComponentInParent<Hitpoints>() != null;
 
-            if (isCarTrunk && hasHitPoints)
-            {
-                HandleCarTrunkDamage(damageInfo, collider, ref validDamage);
-            }
+            if (!hasHitPoints) return;
 
-            if (isLootableContainer && hasHitPoints)
-            {
-                HandleLootableContainerDamage(damageInfo, collider, ref validDamage);
-            }
-
-            if (isDoor && hasHitPoints)
-            {
-                HandleDoorDamage(damageInfo, collider, ref validDamage);
-            }
+            if (isCarTrunk) HandleCarTrunkDamage(damageInfo, collider, ref validDamage);
+            if (isLootableContainer) HandleLootableContainerDamage(damageInfo, collider, ref validDamage);
+            if (isDoor) HandleDoorDamage(damageInfo, collider, ref validDamage);
         }
 
         #region DamageApplication
@@ -149,15 +135,16 @@ namespace DoorBreach
 
         internal static void HandleDamage(DamageInfoStruct damageInfo, BallisticCollider collider, ref bool validDamage, string entityName, Action<Hitpoints, GameObject> onHitpointsZero)
         {
-            Hitpoints hitpoints = collider.GetComponentInParent<Hitpoints>() as Hitpoints;
+            Hitpoints hitpoints = collider.GetComponentInParent<Hitpoints>();
 
-            if (validDamage)
-            {
-                Logger.LogInfo($"BackdoorBandit: Applying Hit Damage {damageInfo.Damage} hitpoints to {entityName}");
-                hitpoints.hitpoints -= damageInfo.Damage;
+            if (!validDamage)
+                return;
 
-                onHitpointsZero?.Invoke(hitpoints, collider.gameObject);
-            }
+            Logger.LogInfo($"BackdoorBandit: Applying Hit Damage {damageInfo.Damage} hitpoints to {entityName}");
+            hitpoints.hitpoints -= damageInfo.Damage;
+
+            onHitpointsZero?.Invoke(hitpoints, collider.gameObject);
+
         }
         internal static void OpenDoorIfNotAlreadyOpen<T>(T entity, Player player, EInteractionType interactionType) where T : class
         {
@@ -172,9 +159,6 @@ namespace DoorBreach
                     door.interactWithoutAnimation = true;
                     player.CurrentManagedState.ExecuteDoorInteraction(door, new InteractionResult(interactionType), null, player);
                     door.interactWithoutAnimation = doorUsesAnim;
-
-                    //CustomExecuteDoorInteraction(door, new InteractionResult(EInteractionType.Breach), null, player);
-                    //player.UpdateInteractionCast();
 
                     // Create packet with info that all players will need
                     SyncOpenStatePacket packet = new SyncOpenStatePacket()
