@@ -78,9 +78,9 @@ namespace DoorBreach
             }
         }
 
-        internal static void IsMarkedRoom(Door door, ref bool validDamage, ref HashSet<string> markedRooms)
+        internal static void IsMarkedRoom(Door door, ref bool validDamage)
         {
-            if (markedRooms.Contains(door.KeyId))
+            if (DoorBreachComponent.MarkedRooms.Contains(door.KeyId))
             {
                 validDamage = false;
                 return;
