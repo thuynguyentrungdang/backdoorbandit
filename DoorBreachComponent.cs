@@ -35,7 +35,7 @@ namespace DoorBreach
         internal static HashSet<string> OtherWeapons;
         internal static HashSet<string> ApplicableWeapons;
         internal static HashSet<string> MarkedRooms;
-
+        internal static HashSet<string> ValidRounds;
         internal static ManualLogSource Logger
         {
             get; private set;
@@ -74,6 +74,7 @@ namespace DoorBreach
             LoadHashSetFromJson(ref ShotgunWeapons, "ShotgunWeapons.json");
             LoadHashSetFromJson(ref OtherWeapons, "OtherWeapons.json");
             LoadHashSetFromJson(ref MarkedRooms, "MarkedRooms.json"); // Load marked rooms's keyIDs from JSON
+            LoadHashSetFromJson(ref ValidRounds, "ValidRounds.json"); // Load whitelisted rounds from JSON
             SetupApplicableWeapons();
 
             ProcessObjectsOfType<Door>("Doors", DoorBreachPlugin.interactiveLayer);
