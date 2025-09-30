@@ -34,6 +34,7 @@ namespace DoorBreach
         internal static HashSet<string> ShotgunWeapons;
         internal static HashSet<string> OtherWeapons;
         internal static HashSet<string> ApplicableWeapons;
+        internal static HashSet<string> MarkedRooms;
 
         internal static ManualLogSource Logger
         {
@@ -72,6 +73,7 @@ namespace DoorBreach
             LoadHashSetFromJson(ref MeleeWeapons, "MeleeWeapons.json");
             LoadHashSetFromJson(ref ShotgunWeapons, "ShotgunWeapons.json");
             LoadHashSetFromJson(ref OtherWeapons, "OtherWeapons.json");
+            LoadHashSetFromJson(ref MarkedRooms, "MarkedRooms.json"); // Load marked rooms's keyIDs from JSON
             SetupApplicableWeapons();
 
             ProcessObjectsOfType<Door>("Doors", DoorBreachPlugin.interactiveLayer);
@@ -99,10 +101,9 @@ namespace DoorBreach
                     return;
 
                 int randHitPoints = Random.Range(DoorBreachPlugin.MinHitPoints.Value, DoorBreachPlugin.MaxHitPoints.Value);
-                Logger.LogDebug($"Setting {objectType} hitpoints to: {randHitPoints}");
                 Hitpoints hitpoints = obj.gameObject.GetOrAddComponent<Hitpoints>();
+                
                 hitpoints.hitpoints = randHitPoints;
-                Logger.LogDebug($"hitpoints component added to {objectType}, current hitpoints: {hitpoints.hitpoints}");
 
                 if (obj is Door door)
                 {
@@ -191,7 +192,6 @@ namespace DoorBreach
 
         private bool IsValidLayer<T>(T obj, int interactiveLayer) where T : Component =>
             obj.gameObject.layer == interactiveLayer;
-
 
         private void LogStatistics(string objectType, int totalCount, int invalidStateCount, int inoperableCount, int invalidLayerCount)
         {

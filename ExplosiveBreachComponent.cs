@@ -213,7 +213,6 @@ namespace DoorBreach
 
             if (foundItem == null) return;
 
-            //TraderControllerClass traderController = (TraderControllerClass)foundItem.Parent.GetOwner();
             GStruct454 discardResult = InteractionsHandlerClass.Discard(foundItem, inventoryController, true);
 
             if (discardResult.Failed)
@@ -267,8 +266,6 @@ namespace DoorBreach
                 audioSource.spatialBlend = 1.0f; //3d sound
             }
 
-            float currentBeepInterval = normalBeepInterval;
-
             while (timer < waitTime)
             {
                 // Check for C4 actual in world still
@@ -286,6 +283,8 @@ namespace DoorBreach
                     audioSource.Play();
                 }
 
+
+                float currentBeepInterval;
                 // Calculate beep interval dynamically
                 if (waitTime - timer <= rapidBeepStart && waitTime - timer > finalToneStart)
                 {
@@ -315,67 +314,67 @@ namespace DoorBreach
 
         private static void TriggerExplosion(Door door, Player player, C4Instance c4Instance)
         {
-            if (c4Instance.LootItem != null && c4Instance.LootItem.gameObject != null)
+            if (c4Instance.LootItem == null || c4Instance.LootItem.gameObject == null)
+                return;
+                
+            effectsInstance.EmitGrenade("big_explosion", c4Instance.LootItem.transform.position, Vector3.forward, DoorBreachPlugin.explosionRadius.Value);
+
+            if (DoorBreachPlugin.explosionDoesDamage.Value)
             {
-                effectsInstance.EmitGrenade("big_explosion", c4Instance.LootItem.transform.position, Vector3.forward, DoorBreachPlugin.explosionRadius.Value);
+                float explosionRadius = DoorBreachPlugin.explosionRadius.Value;
+                float baseDamage = DoorBreachPlugin.explosionDamage.Value;
+                Vector3 explosionPosition = c4Instance.LootItem.transform.position;
 
-                if (DoorBreachPlugin.explosionDoesDamage.Value)
+                Collider[] hitColliders = Physics.OverlapSphere(explosionPosition, explosionRadius);
+                foreach (Collider hitCollider in hitColliders)
                 {
-                    float explosionRadius = DoorBreachPlugin.explosionRadius.Value;
-                    float baseDamage = DoorBreachPlugin.explosionDamage.Value;
-                    Vector3 explosionPosition = c4Instance.LootItem.transform.position;
-
-                    Collider[] hitColliders = Physics.OverlapSphere(explosionPosition, explosionRadius);
-                    foreach (Collider hitCollider in hitColliders)
+                    Player tempplayer = hitCollider.GetComponentInParent<Player>();
+                    if (tempplayer != null)
                     {
-                        Player tempplayer = hitCollider.GetComponentInParent<Player>();
-                        if (tempplayer != null)
+                        float distance = Vector3.Distance(hitCollider.transform.position, explosionPosition);
+                        if (CheckLineOfSight(explosionPosition, hitCollider.transform.position))
                         {
-                            float distance = Vector3.Distance(hitCollider.transform.position, explosionPosition);
-                            if (CheckLineOfSight(explosionPosition, hitCollider.transform.position))
+                            float damageMultiplier = Mathf.Clamp01(1 - distance / explosionRadius);
+                            float damageAmount = baseDamage * damageMultiplier;
+
+                            DamageInfoStruct damageInfo = new DamageInfoStruct
                             {
-                                float damageMultiplier = Mathf.Clamp01(1 - distance / explosionRadius);
-                                float damageAmount = baseDamage * damageMultiplier;
+                                DamageType = EDamageType.Explosion,
+                                Damage = damageAmount,
+                                Direction = (tempplayer.Transform.position - explosionPosition).normalized,
+                                HitPoint = tempplayer.Transform.position,
+                                HitNormal = -(tempplayer.Transform.position - explosionPosition).normalized,
+                                Player = null,
+                                Weapon = null,
+                                ArmorDamage = damageAmount * 0.5f,
+                            };
 
-                                DamageInfoStruct damageInfo = new DamageInfoStruct
-                                {
-                                    DamageType = EDamageType.Explosion,
-                                    Damage = damageAmount,
-                                    Direction = (tempplayer.Transform.position - explosionPosition).normalized,
-                                    HitPoint = tempplayer.Transform.position,
-                                    HitNormal = -(tempplayer.Transform.position - explosionPosition).normalized,
-                                    Player = null,
-                                    Weapon = null,
-                                    ArmorDamage = damageAmount * 0.5f,
-                                };
-
-                                tempplayer.ApplyDamageInfo(damageInfo, EBodyPart.Chest, EBodyPartColliderType.Pelvis, 0f);
-                            }
+                            tempplayer.ApplyDamageInfo(damageInfo, EBodyPart.Chest, EBodyPartColliderType.Pelvis, 0f);
                         }
                     }
                 }
+            }
 
-                // Check if c4Instance and its LootItem exist
-                if (c4Instance != null && c4Instance.LootItem != null)
-                {
-                    // Safe to destroy the C4 since it's confirmed to exist
-                    Destroy(c4Instance.LootItem.gameObject);
-                }
+            // Check if c4Instance and its LootItem exist
+            if (c4Instance != null && c4Instance.LootItem != null)
+            {
+                // Safe to destroy the C4 since it's confirmed to exist
+                Destroy(c4Instance.LootItem.gameObject);
+            }
 
-                // Check if door exists and is not already destroyed
-                if (door != null && door.gameObject != null)
-                {
-                    ApplyHit.OpenDoorIfNotAlreadyOpen(door, player, EInteractionType.Breach);
+            // Check if door exists and is not already destroyed
+            if (door != null && door.gameObject != null)
+            {
+                ApplyHit.OpenDoorIfNotAlreadyOpen(door, player, EInteractionType.Breach);
 
-                    //delete door and need to check if their is related glass
-                    Destroy(door.gameObject);
-                }
+                //delete door and need to check if their is related glass
+                Destroy(door.gameObject);
+            }
 
-                // Clean up references
-                if (c4Instances.Contains(c4Instance))
-                {
-                    c4Instances.Remove(c4Instance);
-                }
+            // Clean up references
+            if (c4Instances.Contains(c4Instance))
+            {
+                c4Instances.Remove(c4Instance);
             }
         }
 
@@ -386,9 +385,8 @@ namespace DoorBreach
 
         private static bool CheckLineOfSight(Vector3 explosionPosition, Vector3 playerPosition)
         {
-            RaycastHit hit;
             Vector3 direction = playerPosition - explosionPosition;
-            if (Physics.Raycast(explosionPosition, direction.normalized, out hit, direction.magnitude))
+            if (Physics.Raycast(explosionPosition, direction.normalized, out RaycastHit hit, direction.magnitude))
             {
                 return hit.collider.GetComponent<Player>() != null;
             }
@@ -400,8 +398,6 @@ namespace DoorBreach
             GameWorld gameWorld = Singleton<GameWorld>.Instance;
             gameWorld.GetOrAddComponent<ExplosiveBreachComponent>();
         }
-
-
     }
 
     

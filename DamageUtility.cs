@@ -53,9 +53,7 @@ namespace DoorBreach
                     return;
                 }
             }
-            DoorBreachComponent.Logger.LogDebug($"BB: Weapon ID is : {weaponID}");
-            DoorBreachComponent.Logger.LogDebug($"BB: validWeapons contains weapon: {validWeapons.Contains(weaponID)}");
-            DoorBreachComponent.Logger.LogDebug($"BB: validWeapons: {validWeapons}");
+
             //check if its on the validWeapons hashset and its not a shotgun.. something user added then we need to skip the isRoundValidCheck
             if (validWeapons.Contains(weaponID) && !IsShotgun(damageInfo) && isValidLockHit(damageInfo))
             {
@@ -79,6 +77,17 @@ namespace DoorBreach
                 return;
             }
         }
+
+        internal static void IsMarkedRoom(Door door, ref bool validDamage, ref HashSet<string> markedRooms)
+        {
+            if (markedRooms.Contains(door.KeyId))
+            {
+                validDamage = false;
+                return;
+            }
+            validDamage = true;
+            return;
+        }   
 
         internal static void CheckDoorWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage)
         {

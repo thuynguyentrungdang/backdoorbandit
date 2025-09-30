@@ -122,8 +122,8 @@ namespace DoorBreach
         {
             if (!DoorBreachPlugin.PlebMode.Value)
             {
-                Logger.LogDebug("BackdoorBandit: Checking Door Weapon and Ammo");
                 DamageUtility.CheckDoorWeaponAndAmmo(damageInfo, ref validDamage);
+                DamageUtility.IsMarkedRoom(collider.GetComponentInParent<Door>(), ref validDamage, ref DoorBreachComponent.MarkedRooms);
             }
 
             Logger.LogDebug($"BackdoorBandit: validDamage before HandleDamage: {validDamage}, calling HandleDamage()");
@@ -132,6 +132,7 @@ namespace DoorBreach
                 WorldInteractiveObject door = entity.GetComponentInParent<WorldInteractiveObject>();
 
                 DoorBreachComponent.Logger.LogDebug("[Door info]");
+                DoorBreachComponent.Logger.LogDebug($"DoorId: {door.Id}");
                 DoorBreachComponent.Logger.LogDebug($"KeyId: {door.KeyId}");
                 DoorBreachComponent.Logger.LogDebug($"DoorState: {door.DoorState}");
                 DoorBreachComponent.Logger.LogDebug($"InitialDoorState: {door.InitialDoorState}");
@@ -141,6 +142,8 @@ namespace DoorBreach
                     OpenDoorIfNotAlreadyOpen(door, damageInfo.Player.AIData.Player, EInteractionType.Breach);
                 }
             });
+
+            
         }
 
         internal static void HandleDamage(DamageInfoStruct damageInfo, BallisticCollider collider, ref bool validDamage, string entityName, Action<Hitpoints, GameObject> onHitpointsZero)
