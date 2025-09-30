@@ -123,7 +123,9 @@ namespace DoorBreach
             if (!DoorBreachPlugin.PlebMode.Value)
             {
                 DamageUtility.CheckDoorWeaponAndAmmo(damageInfo, ref validDamage);
-                DamageUtility.IsMarkedRoom(collider.GetComponentInParent<Door>(), ref validDamage, ref DoorBreachComponent.MarkedRooms);
+
+                if (validDamage)
+                    DamageUtility.IsMarkedRoom(collider.GetComponentInParent<Door>(), ref validDamage);
             }
 
             Logger.LogDebug($"BackdoorBandit: validDamage before HandleDamage: {validDamage}, calling HandleDamage()");
