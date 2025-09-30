@@ -69,6 +69,7 @@ namespace DoorBreach
             MeleeWeapons = new HashSet<string>();
             ShotgunWeapons = new HashSet<string>();
             MarkedRooms = new HashSet<string>();
+            ValidRounds = new HashSet<string>();
 
             LoadHashSetFromJson(ref GrenadeLaunchers, "GrenadeLaunchers.json");
             LoadHashSetFromJson(ref MeleeWeapons, "MeleeWeapons.json");
