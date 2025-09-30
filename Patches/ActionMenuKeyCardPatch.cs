@@ -33,10 +33,10 @@ namespace DoorBreach.Patches
                 Name = "Plant Explosive",
                 Action = new Action(() =>
                 {
-                    DoorBreach.ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
+                    ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
                 }),
                 Disabled = (!door.IsBreachAngle(owner.Player.Position) || !DoorBreach.ExplosiveBreachComponent.IsValidDoorState(door) ||
-                            !DoorBreach.ExplosiveBreachComponent.HasC4Explosives(owner.Player))
+                            !ExplosiveBreachComponent.HasC4Explosives(owner.Player))
             });
         }
     }

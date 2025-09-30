@@ -4,13 +4,16 @@ using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Logging;
 using Comfort.Common;
-using DoorBreach;
 using EFT;
 using EFT.Interactive;
 using EFT.InventoryLogic;
+using Fika.Core.Coop.Utils;
+using Fika.Core.Coop.ClientClasses;
+using Fika.Core.Coop.HostClasses;
 using Systems.Effects;
 using UnityEngine;
 using UnityEngine.Networking;
+using Fika.Core.Coop.Players;
 
 namespace DoorBreach
 {
@@ -193,20 +196,34 @@ namespace DoorBreach
 
         private static void RemoveItemFromPlayerInventory(Player player)
         {
-            Item foundItem = player.Inventory.GetPlayerItems(EPlayerItems.Equipment).FirstOrDefault(x => x.TemplateId == C4ExplosiveId);
+            IEnumerable<Item> items = player.Inventory.GetPlayerItems(EPlayerItems.Equipment);
+            Item foundItem = null;
+
+            foreach (var item in items)
+            {
+                if (item.TemplateId == C4ExplosiveId)
+                {
+                    foundItem = item;
+                    break;
+                }
+            }
+
+            CoopPlayer coopPlayer = player as CoopPlayer;
+            InventoryController inventoryController = coopPlayer.InventoryController;
+
             if (foundItem == null) return;
 
-            TraderControllerClass traderController = (TraderControllerClass)foundItem.Parent.GetOwner();
-            GStruct455<GClass3200> discardResult = InteractionsHandlerClass.Discard(foundItem, traderController, false);
+            //TraderControllerClass traderController = (TraderControllerClass)foundItem.Parent.GetOwner();
+            GStruct454 discardResult = InteractionsHandlerClass.Discard(foundItem, inventoryController, true);
 
-            if (discardResult.Error != null)
+            if (discardResult.Failed)
             {
                 Logger.LogError($"Couldn't remove item: {discardResult.Error}");
                 return;
             }
 
-            discardResult.Value.RaiseEvents(traderController, CommandStatus.Begin);
-            discardResult.Value.RaiseEvents(traderController, CommandStatus.Succeed);
+            inventoryController.TryRunNetworkTransaction(discardResult, null);
+
         }
 
         private static void StartDelayedExplosionCoroutine(Door door, Player player, MonoBehaviour monoBehaviour, C4Instance c4Instance)
@@ -342,7 +359,7 @@ namespace DoorBreach
                 if (c4Instance != null && c4Instance.LootItem != null)
                 {
                     // Safe to destroy the C4 since it's confirmed to exist
-                    UnityEngine.Object.Destroy(c4Instance.LootItem.gameObject);
+                    Destroy(c4Instance.LootItem.gameObject);
                 }
 
                 // Check if door exists and is not already destroyed
@@ -351,7 +368,7 @@ namespace DoorBreach
                     ApplyHit.OpenDoorIfNotAlreadyOpen(door, player, EInteractionType.Breach);
 
                     //delete door and need to check if their is related glass
-                    UnityEngine.Object.Destroy(door.gameObject);
+                    Destroy(door.gameObject);
                 }
 
                 // Clean up references
@@ -380,12 +397,8 @@ namespace DoorBreach
 
         public static void Enable()
         {
-            if (Singleton<IBotGame>.Instantiated)
-            {
-                GameWorld gameWorld = Singleton<GameWorld>.Instance;
-                gameWorld.GetOrAddComponent<ExplosiveBreachComponent>();
-            }
-
+            GameWorld gameWorld = Singleton<GameWorld>.Instance;
+            gameWorld.GetOrAddComponent<ExplosiveBreachComponent>();
         }
 
 

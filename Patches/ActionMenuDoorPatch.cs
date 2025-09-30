@@ -3,7 +3,6 @@ using System.Reflection;
 using SPT.Reflection.Patching;
 using EFT;
 using EFT.Interactive;
-using DoorBreach;
 
 namespace DoorBreach.Patches
 {
@@ -24,10 +23,10 @@ namespace DoorBreach.Patches
                 Name = "Plant Explosive",
                 Action = new Action(() =>
                 {
-                    DoorBreach.ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
+                    ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
                 }),
-                Disabled = (!door.IsBreachAngle(owner.Player.Position) || !DoorBreach.ExplosiveBreachComponent.IsValidDoorState(door) ||
-                            !DoorBreach.ExplosiveBreachComponent.HasC4Explosives(owner.Player))
+                Disabled = !door.IsBreachAngle(owner.Player.Position) || !ExplosiveBreachComponent.IsValidDoorState(door) ||
+                            !ExplosiveBreachComponent.HasC4Explosives(owner.Player)
             };
 
             __result.Actions.Add(breachC4);

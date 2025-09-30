@@ -35,21 +35,25 @@ namespace DoorBreach
 
 
         [PatchPostfix]
-        public static void PatchPostFix(DamageInfoStruct damageInfo, ShotIdStruct shotID)
+        public static void PatchPostFix(DamageInfoStruct damageInfo)
         {
             //try catch for random things applying damage that we don't want
             try
             {
                 if (ShouldApplyDamage(damageInfo))
                 {
-                    HandleDamageForEntity(damageInfo, damageInfo.HittedBallisticCollider as BallisticCollider);
+                    HandleDamageForEntity(damageInfo);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Logger.LogError($"BackdoorBandit: Exception in ApplyHitPatch.PatchPostfix(): {ex}");
+            }
         }
 
         private static bool ShouldApplyDamage(DamageInfoStruct damageInfo)
         {
+
             return damageInfo.Player != null
                 && damageInfo.Player.iPlayer.IsYourPlayer
                 && damageInfo.HittedBallisticCollider.HitType != EFT.NetworkPackets.EHitType.Lamp
@@ -57,17 +61,21 @@ namespace DoorBreach
                 && damageInfo.DamageType != EDamageType.Explosion;
         }
 
-        private static void HandleDamageForEntity(DamageInfoStruct damageInfo, BallisticCollider collider)
+        private static void HandleDamageForEntity(DamageInfoStruct damageInfo)
         {
-            if (!collider) return; // Unity null-safe check
+            BallisticCollider collider = damageInfo.HittedBallisticCollider;
+            if (collider == null) return; // Unity null-safe check
 
-            bool validDamage = DoorBreachPlugin.PlebMode.Value || false;
+            bool validDamage = DoorBreachPlugin.PlebMode.Value;
 
             bool isCarTrunk = collider.GetComponentInParent<Trunk>() != null;
             bool isLootableContainer = collider.GetComponentInParent<LootableContainer>() != null;
             bool isDoor = collider.GetComponentInParent<Door>() != null;
             bool hasHitPoints = collider.GetComponentInParent<Hitpoints>() != null;
 
+            Logger.LogDebug($"BackdoorBandit: isCarTrunk: {isCarTrunk}, isLootableContainer: {isLootableContainer}, isDoor: {isDoor}, hasHitPoints: {hasHitPoints}");
+            Logger.LogDebug($"BackdoorBandit: validDamage initialized to: {validDamage}");
+            Logger.LogDebug($"BackdoorBandit: hasHitPoints: {hasHitPoints}");
             if (!hasHitPoints) return;
 
             if (isCarTrunk) HandleCarTrunkDamage(damageInfo, collider, ref validDamage);
@@ -114,9 +122,11 @@ namespace DoorBreach
         {
             if (!DoorBreachPlugin.PlebMode.Value)
             {
+                Logger.LogDebug("BackdoorBandit: Checking Door Weapon and Ammo");
                 DamageUtility.CheckDoorWeaponAndAmmo(damageInfo, ref validDamage);
             }
 
+            Logger.LogDebug($"BackdoorBandit: validDamage before HandleDamage: {validDamage}, calling HandleDamage()");
             HandleDamage(damageInfo, collider, ref validDamage, "Door", (hitpoints, entity) =>
             {
                 WorldInteractiveObject door = entity.GetComponentInParent<WorldInteractiveObject>();

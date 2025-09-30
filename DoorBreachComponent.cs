@@ -3,7 +3,6 @@ using System.IO;
 using System.Reflection;
 using BepInEx.Logging;
 using Comfort.Common;
-using DoorBreach;
 using EFT;
 using EFT.Interactive;
 using Newtonsoft.Json;
@@ -86,6 +85,7 @@ namespace DoorBreach
 
         private void ProcessObjectsOfType<T>(string objectType, int interactiveLayer) where T : Component
         {
+            Logger.LogInfo($"Processing {objectType}...");
             int count = 0;
             int invalidCount = 0;
             int inoperableCount = 0;
@@ -98,9 +98,11 @@ namespace DoorBreach
                 if (!IsValidObject(obj, ref invalidCount, ref inoperableCount, ref invalidLayerCount, interactiveLayer))
                     return;
 
-                int randHitPoints = UnityEngine.Random.Range(DoorBreachPlugin.MinHitPoints.Value, DoorBreachPlugin.MaxHitPoints.Value);
+                int randHitPoints = Random.Range(DoorBreachPlugin.MinHitPoints.Value, DoorBreachPlugin.MaxHitPoints.Value);
+                Logger.LogDebug($"Setting {objectType} hitpoints to: {randHitPoints}");
                 Hitpoints hitpoints = obj.gameObject.GetOrAddComponent<Hitpoints>();
                 hitpoints.hitpoints = randHitPoints;
+                Logger.LogDebug($"hitpoints component added to {objectType}, current hitpoints: {hitpoints.hitpoints}");
 
                 if (obj is Door door)
                 {
@@ -201,11 +203,8 @@ namespace DoorBreach
 
         public static void Enable()
         {
-            if (Singleton<IBotGame>.Instantiated)
-            {
-                GameWorld gameWorld = Singleton<GameWorld>.Instance;
-                gameWorld.GetOrAddComponent<DoorBreachComponent>();
-            }
+            GameWorld gameWorld = Singleton<GameWorld>.Instance;
+            gameWorld?.GetOrAddComponent<DoorBreachComponent>();
         }
         private void LoadHashSetFromJson(ref HashSet<string> hashSet, string jsonFileName)
         {
@@ -225,10 +224,10 @@ namespace DoorBreach
 
         internal static void SetupApplicableWeapons()
         {
-            ApplicableWeapons.UnionWith(DoorBreachComponent.MeleeWeapons);
-            ApplicableWeapons.UnionWith(DoorBreachComponent.GrenadeLaunchers);
-            ApplicableWeapons.UnionWith(DoorBreachComponent.ShotgunWeapons);
-            ApplicableWeapons.UnionWith(DoorBreachComponent.OtherWeapons);
+            ApplicableWeapons.UnionWith(MeleeWeapons);
+            ApplicableWeapons.UnionWith(GrenadeLaunchers);
+            ApplicableWeapons.UnionWith(ShotgunWeapons);
+            ApplicableWeapons.UnionWith(OtherWeapons);
 #if DEBUG
             //print out applicable weapons hashes to console
             Logger.LogDebug("Applicable Weapons:");

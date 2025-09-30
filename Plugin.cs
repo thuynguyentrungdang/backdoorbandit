@@ -137,7 +137,6 @@ namespace DoorBreach
                new AcceptableValueRange<int>(0, 500),
                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 1 }));
 
-            new NewGamePatch().Enable();
             new ApplyHit().Enable();
             new ActionMenuDoorPatch().Enable();
             new ActionMenuKeyCardPatch().Enable();
@@ -167,10 +166,10 @@ namespace DoorBreach
 
         private void OnGameWorldStarted(GameWorldStartedEvent obj)
         {
-            DoorBreachPlugin.interactiveLayer = LayerMask.NameToLayer("Interactive");
-
-            DoorBreach.DoorBreachComponent.Enable();
-            DoorBreach.ExplosiveBreachComponent.Enable();
+            interactiveLayer = LayerMask.NameToLayer("Interactive");
+            Logger.LogInfo("OnGameWorldStarted called");
+            DoorBreachComponent.Enable();
+            ExplosiveBreachComponent.Enable();
         }
 
         private void OnTNTPacketReceived(PlantC4Packet packet, NetPeer peer)
@@ -261,24 +260,6 @@ namespace DoorBreach
                     }
                 }
             }
-        }
-    }
-
-
-
-    //re-initializes each new game
-    internal class NewGamePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod() => typeof(GameWorld).GetMethod(nameof(GameWorld.OnGameStarted));
-
-        [PatchPrefix]
-        public static void PatchPrefix()
-        {
-            //stolen from drakiaxyz - thanks
-            DoorBreachPlugin.interactiveLayer = LayerMask.NameToLayer("Interactive");
-
-            DoorBreach.DoorBreachComponent.Enable();
-            DoorBreach.ExplosiveBreachComponent.Enable();
         }
     }
 }
