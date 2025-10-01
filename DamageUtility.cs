@@ -88,9 +88,9 @@ namespace DoorBreach
             validDamage = true;
             return;
         }   
-        internal static bool IsValidRound(AmmoTemplate ammo, ref HashSet<string> validRounds)
+        internal static bool IsValidRound(AmmoTemplate ammo)
         {
-            if (validRounds.Contains(ammo._id))
+            if (DoorBreachComponent.ValidRounds.Contains(ammo._id))
             {
                 return true;
             }
@@ -99,19 +99,19 @@ namespace DoorBreach
         internal static void CheckDoorWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage)
         {
             CheckWeaponAndAmmo(damageInfo, ref validDamage, ref DoorBreachComponent.ApplicableWeapons,
-               ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo), IsValidDoorLockHit);
+               ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo) || IsValidRound(ammo), IsValidDoorLockHit);
         }
 
         internal static void CheckCarWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage)
         {
             CheckWeaponAndAmmo(damageInfo, ref validDamage, ref DoorBreachComponent.ApplicableWeapons,
-                ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo), IsValidCarTrunkLockHit);
+                ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo) || IsValidRound(ammo), IsValidCarTrunkLockHit);
         }
 
         internal static void CheckLootableContainerWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage)
         {
             CheckWeaponAndAmmo(damageInfo, ref validDamage, ref DoorBreachComponent.ApplicableWeapons,
-                ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo), IsValidContainerLockHit);
+                ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo) || IsValidRound(ammo), IsValidContainerLockHit);
         }
 
         internal static bool IsShrapnel(AmmoTemplate bulletTemplate)
