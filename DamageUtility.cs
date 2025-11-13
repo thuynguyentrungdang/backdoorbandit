@@ -11,30 +11,37 @@ namespace DoorBreach
 {
     internal static class DamageUtility
     {
-        internal static void CheckWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage, ref HashSet<string> validWeapons, Func<AmmoTemplate, bool> isRoundValid, Func<DamageInfoStruct, bool> isValidLockHit)
+        internal static void CheckWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage, List<string> validWeapons, Func<AmmoTemplate, bool> isRoundValid, Func<DamageInfoStruct, bool> isValidLockHit)
         {
             MaterialType material = damageInfo.HittedBallisticCollider.TypeOfMaterial;
             MongoID weaponID = damageInfo.Weapon.TemplateId;
 
             //semi-pleb mode.  All regular doors are shootable any weapon except for reinforced doors
-            if (DoorBreachPlugin.SemiPlebMode.Value && material != MaterialType.MetalThin && material != MaterialType.MetalThick)
+            if (DoorBreachPlugin.SemiPlebMode.Value && 
+                material != MaterialType.MetalThin && 
+                material != MaterialType.MetalThick)
             {
                 validDamage = true;
                 return;
             }
 
             //regular valid melee weapon check
-            if (damageInfo.DamageType != EDamageType.Bullet && damageInfo.DamageType != EDamageType.GrenadeFragment)
+            if (damageInfo.DamageType != EDamageType.Bullet && 
+                damageInfo.DamageType != EDamageType.GrenadeFragment)
             {
-                if (damageInfo.DamageType == EDamageType.Melee && DoorBreachComponent.MeleeWeapons.Contains(weaponID) && material != MaterialType.MetalThin && material != MaterialType.MetalThick)
-                {
+                if (damageInfo.DamageType == EDamageType.Melee && 
+                    DoorBreachComponent.MeleeWeapons.Contains(weaponID) && 
+                    material != MaterialType.MetalThin && 
+                    material != MaterialType.MetalThick)
                     validDamage = true;
-                }
 
                 return;
             }
 
             AmmoTemplate bulletTemplate = Singleton<ItemFactoryClass>.Instance.ItemTemplates[damageInfo.SourceId] as AmmoTemplate;
+
+            if (bulletTemplate == null)
+                return;
 
 #if DEBUG
             DoorBreachComponent.Logger.LogDebug($"ammoTemplate: {bulletTemplate.Name}");
@@ -47,7 +54,8 @@ namespace DoorBreach
             //check if weapon is a shotgun and material type is metal
             if (!DoorBreachPlugin.BreachingRoundsOpenMetalDoors.Value)
             {
-                if (IsBreachingSlug(bulletTemplate) && (material == MaterialType.MetalThin || material == MaterialType.MetalThick))
+                if (IsBreachingSlug(bulletTemplate) && 
+                    (material == MaterialType.MetalThin || material == MaterialType.MetalThick))
                 {
                     validDamage = false;
                     return;
@@ -55,10 +63,11 @@ namespace DoorBreach
             }
 
             //check if its on the validWeapons hashset and its not a shotgun.. something user added then we need to skip the isRoundValidCheck
-            if (validWeapons.Contains(weaponID) && !IsShotgun(damageInfo) && isValidLockHit(damageInfo))
+            if (validWeapons.Contains(weaponID) && 
+                !IsShotgun(damageInfo) && 
+                isValidLockHit(damageInfo))
             {
                 validDamage = true;
-                return;
             }
             //regular valid weapon and round check
             else if (validWeapons.Contains(weaponID) && isRoundValid(bulletTemplate) && isValidLockHit(damageInfo))
@@ -70,11 +79,7 @@ namespace DoorBreach
 
                 // Additional modifications or actions for specific cases
                 if (isValidLockHit == IsValidCarTrunkLockHit)
-                {
                     damageInfo.Damage = 500;  //only so it opens the car trunk in one shot
-                }
-
-                return;
             }
         }
 
@@ -86,32 +91,36 @@ namespace DoorBreach
                 return;
             }
             validDamage = true;
-            return;
         }   
         internal static bool IsValidRound(AmmoTemplate ammo)
         {
-            if (DoorBreachComponent.ValidRounds.Contains(ammo._id))
-            {
-                return true;
-            }
-            return false;
+            return DoorBreachComponent.ValidRounds.Contains(ammo._id);
         }
         internal static void CheckDoorWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage)
         {
-            CheckWeaponAndAmmo(damageInfo, ref validDamage, ref DoorBreachComponent.ApplicableWeapons,
-               ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo) || IsValidRound(ammo), IsValidDoorLockHit);
+            CheckWeaponAndAmmo(damageInfo, ref validDamage, DoorBreachComponent.ApplicableWeapons,
+               ammo => IsHEGrenade(ammo) || 
+                                   IsShrapnel(ammo) || 
+                                   IsBreachingSlug(ammo) || 
+                                   IsValidRound(ammo), IsValidDoorLockHit);
         }
 
         internal static void CheckCarWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage)
         {
-            CheckWeaponAndAmmo(damageInfo, ref validDamage, ref DoorBreachComponent.ApplicableWeapons,
-                ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo) || IsValidRound(ammo), IsValidCarTrunkLockHit);
+            CheckWeaponAndAmmo(damageInfo, ref validDamage, DoorBreachComponent.ApplicableWeapons,
+                ammo => IsHEGrenade(ammo) || 
+                                    IsShrapnel(ammo) || 
+                                    IsBreachingSlug(ammo) || 
+                                    IsValidRound(ammo), IsValidCarTrunkLockHit);
         }
 
         internal static void CheckLootableContainerWeaponAndAmmo(DamageInfoStruct damageInfo, ref bool validDamage)
         {
-            CheckWeaponAndAmmo(damageInfo, ref validDamage, ref DoorBreachComponent.ApplicableWeapons,
-                ammo => IsHEGrenade(ammo) || IsShrapnel(ammo) || IsBreachingSlug(ammo) || IsValidRound(ammo), IsValidContainerLockHit);
+            CheckWeaponAndAmmo(damageInfo, ref validDamage, DoorBreachComponent.ApplicableWeapons,
+                ammo => IsHEGrenade(ammo) || 
+                                    IsShrapnel(ammo) || 
+                                    IsBreachingSlug(ammo) || 
+                                    IsValidRound(ammo), IsValidContainerLockHit);
         }
 
         internal static bool IsShrapnel(AmmoTemplate bulletTemplate)
@@ -146,19 +155,16 @@ namespace DoorBreach
             Collider col = damageInfo.HitCollider;
 
             //if doorhandle exists and is hit
-            if (col.GetComponentInParent<Door>().GetComponentInChildren<DoorHandle>() != null)
-            {
-                Vector3 localHitPoint = col.transform.InverseTransformPoint(damageInfo.HitPoint);
-                DoorHandle doorHandle = col.GetComponentInParent<Door>().GetComponentInChildren<DoorHandle>();
-                Vector3 doorHandleLocalPos = doorHandle.transform.localPosition;
-                float distanceToHandle = Vector3.Distance(localHitPoint, doorHandleLocalPos);
-                return distanceToHandle < 0.25f;
-            }
-            //if doorhandle does not exist then it is a valid hit
-            else
-            {
+            if (col.GetComponentInParent<Door>().GetComponentInChildren<DoorHandle>() == null) 
                 return true;
-            }
+            
+            Vector3 localHitPoint = col.transform.InverseTransformPoint(damageInfo.HitPoint);
+            DoorHandle doorHandle = col.GetComponentInParent<Door>().GetComponentInChildren<DoorHandle>();
+            Vector3 doorHandleLocalPos = doorHandle.transform.localPosition;
+            float distanceToHandle = Vector3.Distance(localHitPoint, doorHandleLocalPos);
+            return distanceToHandle < 0.25f;
+
+            //if doorhandle does not exist then it is a valid hit
 
         }
 
@@ -168,23 +174,19 @@ namespace DoorBreach
             Collider col = damageInfo.HitCollider;
 
             //if doorhandle exists and is hit
-            if (col.GetComponentInParent<Trunk>().GetComponentInChildren<DoorHandle>() != null)
-            {
-                GameObject gameobj = col.GetComponentInParent<Trunk>().gameObject;
-
-                //find child game object Lock from gameobj
-                GameObject carLockObj = gameobj.transform.Find("CarLock_Hand").gameObject;
-                GameObject lockObj = carLockObj.transform.Find("Lock").gameObject;
-
-                float distanceToLock = Vector3.Distance(damageInfo.HitPoint, lockObj.transform.position);
-
-                return distanceToLock < 0.25f;
-            }
             //if doorhandle does not exist then it is a valid hit
-            else
-            {
+            if (col.GetComponentInParent<Trunk>().GetComponentInChildren<DoorHandle>() == null) 
                 return true;
-            }
+            
+            GameObject gameobj = col.GetComponentInParent<Trunk>().gameObject;
+
+            //find child game object Lock from gameobj
+            GameObject carLockObj = gameobj.transform.Find("CarLock_Hand").gameObject;
+            GameObject lockObj = carLockObj.transform.Find("Lock").gameObject;
+
+            float distanceToLock = Vector3.Distance(damageInfo.HitPoint, lockObj.transform.position);
+
+            return distanceToLock < 0.25f;
 
         }
 
@@ -194,22 +196,17 @@ namespace DoorBreach
             Collider col = damageInfo.HitCollider;
 
             //if doorhandle exists and is hit
-            if (col.GetComponentInParent<LootableContainer>().GetComponentInChildren<DoorHandle>() != null)
-            {
-                GameObject gameobj = col.GetComponentInParent<LootableContainer>().gameObject;
-
-                //find child game object Lock from gameobj
-                GameObject lockObj = gameobj.transform.Find("Lock").gameObject;
-
-                float distanceToLock = Vector3.Distance(damageInfo.HitPoint, lockObj.transform.position);
-                return distanceToLock < 0.25f;
-            }
             //if doorhandle does not exist then it is a valid hit
-            else
-            {
-
+            if (col.GetComponentInParent<LootableContainer>().GetComponentInChildren<DoorHandle>() == null) 
                 return true;
-            }
+            
+            GameObject gameobj = col.GetComponentInParent<LootableContainer>().gameObject;
+
+            //find child game object Lock from gameobj
+            GameObject lockObj = gameobj.transform.Find("Lock").gameObject;
+
+            float distanceToLock = Vector3.Distance(damageInfo.HitPoint, lockObj.transform.position);
+            return distanceToLock < 0.25f;
 
         }
 

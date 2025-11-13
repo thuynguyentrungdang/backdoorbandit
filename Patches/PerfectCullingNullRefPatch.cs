@@ -2,7 +2,6 @@
 using System.Reflection;
 using SPT.Reflection.Patching;
 using Koenigz.PerfectCulling;
-using Koenigz.PerfectCulling.EFT;
 using UnityEngine;
 
 namespace DoorBreach.Patches

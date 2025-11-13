@@ -3,11 +3,11 @@ using System.Reflection;
 using SPT.Reflection.Patching;
 using EFT;
 using EFT.Interactive;
-using Fika.Core.Coop.Utils;
+using Fika.Core.Main.Utils;
 using Fika.Core.Networking;
 using Comfort.Common;
-using LiteNetLib;
-using Fika.Core.Coop.Players;
+using Fika.Core.Networking.LiteNetLib;
+using Fika.Core.Main.Players;
 
 namespace DoorBreach.Patches
 {
@@ -29,8 +29,9 @@ namespace DoorBreach.Patches
                 Action = new Action(() =>
                 {
                     ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
+                    ExplosiveBreachComponent.RemoveItemFromPlayerInventory(owner.Player);
 
-                    CoopPlayer player = owner.Player as CoopPlayer;
+                    FikaPlayer player = owner.Player as FikaPlayer;
 
                     PlantC4Packet packet = new PlantC4Packet
                     {
@@ -42,8 +43,8 @@ namespace DoorBreach.Patches
                     if (FikaBackendUtils.IsServer)
                     {
                         // Forward the packet to all clients
-                        Singleton<FikaServer>.Instance.SendDataToAll(ref packet,
-                            DeliveryMethod.ReliableOrdered);
+                        Singleton<FikaServer>.Instance.SendData(ref packet,
+                            DeliveryMethod.ReliableOrdered, true);
                         // ReliableOrdered = ensures the packet is received, re-sends it if it fails
                     }
                     else if (FikaBackendUtils.IsClient)

@@ -29,13 +29,13 @@ namespace DoorBreach
         private static int inoperatableTrunks = 0;
         private static int invalidTrunkLayer = 0;
 
-        internal static HashSet<string> GrenadeLaunchers;
-        internal static HashSet<string> MeleeWeapons;
-        internal static HashSet<string> ShotgunWeapons;
-        internal static HashSet<string> OtherWeapons;
-        internal static HashSet<string> ApplicableWeapons;
-        internal static HashSet<string> MarkedRooms;
-        internal static HashSet<string> ValidRounds;
+        internal static List<string> GrenadeLaunchers;
+        internal static List<string> MeleeWeapons;
+        internal static List<string> ShotgunWeapons;
+        internal static List<string> OtherWeapons;
+        internal static List<string> ApplicableWeapons;
+        internal static List<string> MarkedRooms;
+        internal static List<string> ValidRounds;
         internal static ManualLogSource Logger
         {
             get; private set;
@@ -63,20 +63,15 @@ namespace DoorBreach
             invalidCarTrunks = 0;
             inoperatableTrunks = 0;
             invalidTrunkLayer = 0;
-            ApplicableWeapons = new HashSet<string>();
-            OtherWeapons = new HashSet<string>();
-            GrenadeLaunchers = new HashSet<string>();
-            MeleeWeapons = new HashSet<string>();
-            ShotgunWeapons = new HashSet<string>();
-            MarkedRooms = new HashSet<string>();
-            ValidRounds = new HashSet<string>();
+            ApplicableWeapons = [];
 
-            LoadHashSetFromJson(ref GrenadeLaunchers, "GrenadeLaunchers.json");
-            LoadHashSetFromJson(ref MeleeWeapons, "MeleeWeapons.json");
-            LoadHashSetFromJson(ref ShotgunWeapons, "ShotgunWeapons.json");
-            LoadHashSetFromJson(ref OtherWeapons, "OtherWeapons.json");
-            LoadHashSetFromJson(ref MarkedRooms, "MarkedRooms.json"); // Load marked rooms's keyIDs from JSON
-            LoadHashSetFromJson(ref ValidRounds, "ValidRounds.json"); // Load whitelisted rounds from JSON
+            GrenadeLaunchers = DoorBreachPlugin.ModConfig.GrenadeLauncherList;
+            MeleeWeapons = DoorBreachPlugin.ModConfig.MeleeWeaponList;
+            ShotgunWeapons = DoorBreachPlugin.ModConfig.ShotgunList;
+            OtherWeapons = DoorBreachPlugin.ModConfig.OtherWeaponList;
+            MarkedRooms = DoorBreachPlugin.ModConfig.BlacklistedRooms;
+            ValidRounds = DoorBreachPlugin.ModConfig.WhitelistedRounds;
+            
             SetupApplicableWeapons();
 
             ProcessObjectsOfType<Door>("Doors", DoorBreachPlugin.interactiveLayer);
@@ -108,17 +103,17 @@ namespace DoorBreach
                 
                 hitpoints.hitpoints = randHitPoints;
 
-                if (obj is Door door)
+                switch (obj)
                 {
-                    door.OnEnable();
-                }
-                else if (obj is LootableContainer container)
-                {
-                    container.OnEnable();
-                }
-                else if (obj is Trunk trunk)
-                {
-                    trunk.OnEnable();
+                    case Door door:
+                        door.OnEnable();
+                        break;
+                    case LootableContainer container:
+                        container.OnEnable();
+                        break;
+                    case Trunk trunk:
+                        trunk.OnEnable();
+                        break;
                 }
             });
 
@@ -127,38 +122,27 @@ namespace DoorBreach
 
         private bool IsOperatable<T>(T obj) where T : Component
         {
-            if (obj is Door door)
+            switch (obj)
             {
-                return door.Operatable;
+                case Door door:
+                    return door.Operatable;
+                case LootableContainer container:
+                    return container.Operatable;
+                case Trunk trunk:
+                    return trunk.Operatable;
+                default:
+                    // Default case: assume operatable if not one of the specific types
+                    return true;
             }
-            else if (obj is LootableContainer container)
-            {
-                return container.Operatable;
-            }
-            else if (obj is Trunk trunk)
-            {
-                return trunk.Operatable;
-            }
-
-            // Default case: assume operatable if not one of the specific types
-            return true;
         }
 
         private bool IsValidObject<T>(T obj, ref int invalidCount, ref int inoperableCount, ref int invalidLayerCount, int interactiveLayer) where T : Component
         {
-            if (obj is Door door && !IsValidDoorState(door))
-            {
-                invalidCount++;
-                return false;
-            }
-
-            if (obj is LootableContainer container && !IsValidContainerState(container))
-            {
-                invalidCount++;
-                return false;
-            }
-
-            if (obj is Trunk trunk && !IsValidTrunkState(trunk))
+            if (obj is Door door && 
+                !IsValidDoorState(door) || 
+                obj is LootableContainer container && 
+                !IsValidContainerState(container) || 
+                obj is Trunk trunk && !IsValidTrunkState(trunk))
             {
                 invalidCount++;
                 return false;
@@ -170,28 +154,34 @@ namespace DoorBreach
                 return false;
             }
 
-            if (!IsValidLayer(obj, interactiveLayer))
-            {
-                invalidLayerCount++;
-                return false;
-            }
+            if (IsValidLayer(obj, interactiveLayer)) 
+                return true;
+            
+            invalidLayerCount++;
+            return false;
 
-            return true;
         }
 
         private bool IsValidDoorState(Door door)
         {
-            if(door.DoorState == EDoorState.Shut || door.DoorState == EDoorState.Locked || door.DoorState == EDoorState.Breaching || door.DoorState == EDoorState.Open)
+            if(door.DoorState == EDoorState.Shut || 
+               door.DoorState == EDoorState.Locked || 
+               door.DoorState == EDoorState.Breaching || 
+               door.DoorState == EDoorState.Open)
                 return true;
 
             return false;
         }
 
         private bool IsValidContainerState(LootableContainer container) =>
-            container.DoorState == EDoorState.Shut || container.DoorState == EDoorState.Locked || container.DoorState == EDoorState.Breaching;
+            container.DoorState == EDoorState.Shut || 
+            container.DoorState == EDoorState.Locked || 
+            container.DoorState == EDoorState.Breaching;
 
         private bool IsValidTrunkState(Trunk trunk) =>
-            trunk.DoorState == EDoorState.Shut || trunk.DoorState == EDoorState.Locked || trunk.DoorState == EDoorState.Breaching;
+            trunk.DoorState == EDoorState.Shut || 
+            trunk.DoorState == EDoorState.Locked || 
+            trunk.DoorState == EDoorState.Breaching;
 
         private bool IsValidLayer<T>(T obj, int interactiveLayer) where T : Component =>
             obj.gameObject.layer == interactiveLayer;
@@ -207,33 +197,20 @@ namespace DoorBreach
         public static void Enable()
         {
             GameWorld gameWorld = Singleton<GameWorld>.Instance;
-            gameWorld?.GetOrAddComponent<DoorBreachComponent>();
-        }
-        private void LoadHashSetFromJson(ref HashSet<string> hashSet, string jsonFileName)
-        {
-            string dllDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string jsonPath = Path.Combine(dllDirectory, jsonFileName);
-
-            if (File.Exists(jsonPath))
-            {
-                string jsonContent = File.ReadAllText(jsonPath);
-                hashSet = JsonConvert.DeserializeObject<HashSet<string>>(jsonContent);
-            }
-            else
-            {
-                Logger.LogError($"JSON file not found: {jsonFileName}");
-            }
+            gameWorld.GetOrAddComponent<DoorBreachComponent>();
         }
 
         internal static void SetupApplicableWeapons()
         {
-            ApplicableWeapons.UnionWith(MeleeWeapons);
-            ApplicableWeapons.UnionWith(GrenadeLaunchers);
-            ApplicableWeapons.UnionWith(ShotgunWeapons);
-            ApplicableWeapons.UnionWith(OtherWeapons);
+            ApplicableWeapons.AddRange(MeleeWeapons);
+            ApplicableWeapons.AddRange(GrenadeLaunchers);
+            ApplicableWeapons.AddRange(ShotgunWeapons);
+            ApplicableWeapons.AddRange(OtherWeapons);
+            
 #if DEBUG
             //print out applicable weapons hashes to console
             Logger.LogDebug("Applicable Weapons:");
+            
             foreach (string weapon in ApplicableWeapons)
             {
                 Logger.LogDebug(weapon);
@@ -241,6 +218,5 @@ namespace DoorBreach
 #endif
         }
     }
-
 }
 

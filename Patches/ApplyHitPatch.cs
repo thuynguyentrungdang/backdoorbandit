@@ -7,9 +7,9 @@ using EFT.Ballistics;
 using EFT.Interactive;
 using UnityEngine;
 using Fika.Core.Networking;
-using Fika.Core.Coop.Utils;
-using Fika.Core.Coop.Players;
-using LiteNetLib;
+using Fika.Core.Main.Utils;
+using Fika.Core.Main.Players;
+using Fika.Core.Networking.LiteNetLib;
 using JetBrains.Annotations;
 
 #pragma warning disable IDE0044 // Add readonly modifier
@@ -110,11 +110,11 @@ namespace DoorBreach
 
             HandleDamage(damageInfo, collider, ref validDamage, "Lootable Container", (hitpoints, entity) =>
             {
-                if (hitpoints.hitpoints <= 0)
-                {
-                    LootableContainer lootContainer = entity.GetComponentInParent<LootableContainer>();
-                    OpenDoorIfNotAlreadyOpen(lootContainer, damageInfo.Player.AIData.Player, EInteractionType.Open);
-                }
+                if (!(hitpoints.hitpoints <= 0)) 
+                    return;
+                
+                LootableContainer lootContainer = entity.GetComponentInParent<LootableContainer>();
+                OpenDoorIfNotAlreadyOpen(lootContainer, damageInfo.Player.AIData.Player, EInteractionType.Open);
             });
         }
 
@@ -163,116 +163,123 @@ namespace DoorBreach
         }
         internal static void OpenDoorIfNotAlreadyOpen<T>(T entity, Player player, EInteractionType interactionType) where T : class
         {
-            CoopPlayer coopPlayer = player as CoopPlayer;
-            if (entity is Door door)
+            FikaPlayer coopPlayer = player as FikaPlayer;
+            
+            switch (entity)
             {
-                if (door.DoorState != EDoorState.Open)
+                case Door door:
                 {
-                    door.DoorState = EDoorState.Shut;
-                    bool doorUsesAnim = door.interactWithoutAnimation;
-
-                    door.interactWithoutAnimation = true;
-                    player.CurrentManagedState.ExecuteDoorInteraction(door, new InteractionResult(interactionType), null, player);
-                    door.interactWithoutAnimation = doorUsesAnim;
-
-                    // Create packet with info that all players will need
-                    SyncOpenStatePacket packet = new SyncOpenStatePacket()
+                    if (door.DoorState != EDoorState.Open)
                     {
-                        netID = coopPlayer.NetId,
-                        objectID = door.Id,
-                        objectType = 0
-                    };
+                        door.DoorState = EDoorState.Shut;
+                        bool doorUsesAnim = door.interactWithoutAnimation;
 
-                    if (FikaBackendUtils.IsServer)
-                    {
-                        // Forward the packet to all clients
-                        Singleton<FikaServer>.Instance.SendDataToAll(ref packet,
-                            DeliveryMethod.ReliableOrdered);
-                        // ReliableOrdered = ensures the packet is received, re-sends it if it fails
+                        door.interactWithoutAnimation = true;
+                        player.CurrentManagedState.ExecuteDoorInteraction(door, new InteractionResult(interactionType), null, player);
+                        door.interactWithoutAnimation = doorUsesAnim;
+
+                        // Create packet with info that all players will need
+                        SyncOpenStatePacket packet = new SyncOpenStatePacket()
+                        {
+                            netID = coopPlayer.NetId,
+                            objectID = door.Id,
+                            objectType = 0
+                        };
+
+                        if (FikaBackendUtils.IsServer)
+                        {
+                            // Forward the packet to all clients
+                            Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered, true);
+                            // ReliableOrdered = ensures the packet is received, re-sends it if it fails
+                        }
+                        else if (FikaBackendUtils.IsClient)
+                        {
+                            // If we're a client, send it to the host so they can forward it (Check Plugin.cs for behavior)
+                            Singleton<FikaClient>.Instance.SendData(ref packet,
+                                DeliveryMethod.ReliableOrdered);
+                        }
                     }
-                    else if (FikaBackendUtils.IsClient)
-                    {
-                        // If we're a client, send it to the host so they can forward it (Check Plugin.cs for behavior)
-                        Singleton<FikaClient>.Instance.SendData(ref packet,
-                            DeliveryMethod.ReliableOrdered);
-                    }
+
+                    break;
                 }
-            }
-
-            if (entity is LootableContainer container)
-            {
-                if (container.DoorState != EDoorState.Open)
+                case LootableContainer container:
                 {
-                    container.DoorState = EDoorState.Shut;
-                    // Get the original value of whether the container uses an animation or not
-                    bool containerUsesAnim = container.interactWithoutAnimation;
-
-                    // Set the container to not use an animation when opening
-                    container.interactWithoutAnimation = true;
-
-                    // Unlock the container
-                    container.Open();
-
-                    // Open the container
-                    player.CurrentManagedState.ExecuteDoorInteraction(container, new InteractionResult(interactionType), null, player);
-
-                    // Set the container's animation requirement back to the default.
-                    container.interactWithoutAnimation = containerUsesAnim;
-
-                    SyncOpenStatePacket packet = new SyncOpenStatePacket()
+                    if (container.DoorState != EDoorState.Open)
                     {
-                        netID = coopPlayer.NetId,
-                        objectID = container.Id,
-                        objectType = 1
-                    };
+                        container.DoorState = EDoorState.Shut;
+                        // Get the original value of whether the container uses an animation or not
+                        bool containerUsesAnim = container.interactWithoutAnimation;
 
-                    if (FikaBackendUtils.IsServer)
-                    {
-                        Singleton<FikaServer>.Instance.SendDataToAll(ref packet,
-                            DeliveryMethod.ReliableOrdered);
+                        // Set the container to not use an animation when opening
+                        container.interactWithoutAnimation = true;
+
+                        // Unlock the container
+                        container.Open();
+
+                        // Open the container
+                        player.CurrentManagedState.ExecuteDoorInteraction(container, new InteractionResult(interactionType), null, player);
+
+                        // Set the container's animation requirement back to the default.
+                        container.interactWithoutAnimation = containerUsesAnim;
+
+                        SyncOpenStatePacket packet = new SyncOpenStatePacket()
+                        {
+                            netID = coopPlayer.NetId,
+                            objectID = container.Id,
+                            objectType = 1
+                        };
+
+                        if (FikaBackendUtils.IsServer)
+                        {
+                            Singleton<FikaServer>.Instance.SendData(ref packet,
+                                DeliveryMethod.ReliableOrdered, true);
+                        }
+                        else if (FikaBackendUtils.IsClient)
+                        {
+                            Singleton<FikaClient>.Instance.SendData(ref packet,
+                                DeliveryMethod.ReliableOrdered);
+                        }
                     }
-                    else if (FikaBackendUtils.IsClient)
-                    {
-                        Singleton<FikaClient>.Instance.SendData(ref packet,
-                            DeliveryMethod.ReliableOrdered);
-                    }
+
+                    break;
                 }
-            }
-            if (entity is Trunk trunk)
-            {
-
-                if (trunk.DoorState != EDoorState.Open)
+                case Trunk trunk:
                 {
-                    trunk.DoorState = EDoorState.Shut;
-
-                    // Get the original value of whether the container uses an animation or not
-                    bool trunkUsesAnim = trunk.interactWithoutAnimation;
-
-                    // Set the container to not use an animation when opening
-                    trunk.interactWithoutAnimation = true;
-
-                    trunk.Open();
-                    player.CurrentManagedState.ExecuteDoorInteraction(trunk, new InteractionResult(interactionType), null, player);
-
-                    trunk.interactWithoutAnimation = trunkUsesAnim;
-
-                    SyncOpenStatePacket packet = new SyncOpenStatePacket()
+                    if (trunk.DoorState != EDoorState.Open)
                     {
-                        netID = coopPlayer.NetId,
-                        objectID = trunk.Id,
-                        objectType = 2
-                    };
+                        trunk.DoorState = EDoorState.Shut;
 
-                    if (FikaBackendUtils.IsServer)
-                    {
-                        Singleton<FikaServer>.Instance.SendDataToAll(ref packet,
-                            DeliveryMethod.ReliableOrdered);
+                        // Get the original value of whether the container uses an animation or not
+                        bool trunkUsesAnim = trunk.interactWithoutAnimation;
+
+                        // Set the container to not use an animation when opening
+                        trunk.interactWithoutAnimation = true;
+
+                        trunk.Open();
+                        player.CurrentManagedState.ExecuteDoorInteraction(trunk, new InteractionResult(interactionType), null, player);
+
+                        trunk.interactWithoutAnimation = trunkUsesAnim;
+
+                        SyncOpenStatePacket packet = new SyncOpenStatePacket()
+                        {
+                            netID = coopPlayer.NetId,
+                            objectID = trunk.Id,
+                            objectType = 2
+                        };
+
+                        if (FikaBackendUtils.IsServer)
+                        {
+                            Singleton<FikaServer>.Instance.SendData(ref packet,
+                                DeliveryMethod.ReliableOrdered, true);
+                        }
+                        else if (FikaBackendUtils.IsClient)
+                        {
+                            Singleton<FikaClient>.Instance.SendData(ref packet,
+                                DeliveryMethod.ReliableOrdered);
+                        }
                     }
-                    else if (FikaBackendUtils.IsClient)
-                    {
-                        Singleton<FikaClient>.Instance.SendData(ref packet,
-                            DeliveryMethod.ReliableOrdered);
-                    }
+
+                    break;
                 }
             }
         }

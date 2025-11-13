@@ -1,22 +1,23 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Reflection;
-using SPT.Reflection.Patching;
-using Comfort.Common;
+using System.Threading.Tasks;
 using DoorBreach.Patches;
 using BepInEx;
 using BepInEx.Configuration;
+using Comfort.Common;
+using DoorBreach.Models;
 using EFT;
 using EFT.Interactive;
 using UnityEngine;
 using Fika.Core.Networking;
-using Fika.Core.Coop.Utils;
-using Fika.Core.Coop.Players;
+using Fika.Core.Main.Utils;
+using Fika.Core.Main.Players;
 using Fika.Core.Modding;
 using Fika.Core.Modding.Events;
-using Fika.Core.Coop.Components;
-using LiteNetLib;
-using LiteNetLib.Utils;
+using Fika.Core.Main.Components;
+using Fika.Core.Networking.LiteNetLib;
+using Fika.Core.Networking.LiteNetLib.Utils;
+using Newtonsoft.Json;
+using SPT.Common.Http;
 
 namespace DoorBreach
 {
@@ -36,6 +37,8 @@ namespace DoorBreach
         public static ConfigEntry<int> explosionDamage;
 
         private readonly NetPacketProcessor packetProcessor = new NetPacketProcessor();
+        
+        public static ModConfig ModConfig { get; set; }
 
         public static int interactiveLayer;
 
@@ -46,8 +49,9 @@ namespace DoorBreach
             Trunk
         }
 
-        private void Awake()
+        private async void Awake()
         {
+            ModConfig = await LoadFromServer();
 
             PlebMode = Config.Bind(
                 "1. Main Settings",
@@ -140,7 +144,7 @@ namespace DoorBreach
             new ApplyHit().Enable();
             new ActionMenuDoorPatch().Enable();
             new ActionMenuKeyCardPatch().Enable();
-            new PerfectCullingNullRefPatch().Enable();
+            //new PerfectCullingNullRefPatch().Enable();
 
             FikaEventDispatcher.SubscribeEvent<GameWorldStartedEvent>(OnGameWorldStarted);
             FikaEventDispatcher.SubscribeEvent<FikaNetworkManagerCreatedEvent>(OnFikaNetworkManagerCreated);
@@ -166,6 +170,9 @@ namespace DoorBreach
 
         private void OnGameWorldStarted(GameWorldStartedEvent obj)
         {
+            if (FikaBackendUtils.IsHeadless)
+                return;
+            
             interactiveLayer = LayerMask.NameToLayer("Interactive");
             Logger.LogInfo("OnGameWorldStarted called");
             DoorBreachComponent.Enable();
@@ -176,7 +183,7 @@ namespace DoorBreach
         {
             if (CoopHandler.TryGetCoopHandler(out CoopHandler coopHandler))
             {
-                if (coopHandler.Players.TryGetValue(packet.netID, out CoopPlayer player))
+                if (coopHandler.Players.TryGetValue(packet.netID, out FikaPlayer player))
                 {
                     WorldInteractiveObject worldInteractiveObject = Singleton<GameWorld>.Instance.FindDoor(packet.doorID);
                     if (worldInteractiveObject != null)
@@ -193,72 +200,87 @@ namespace DoorBreach
             if (FikaBackendUtils.IsServer)
             {
                 // If the host receives the packet from a client, now forward this packet to all clients (excluding arg2 - the person who sent it).
-                Singleton<FikaServer>.Instance.SendDataToAll(ref packet, DeliveryMethod.ReliableOrdered, peer);
+                Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered, true);
             }
         }
 
         private void OnSyncOpenStatePacketReceived(SyncOpenStatePacket packet, NetPeer peer)
         {
-            if (CoopHandler.TryGetCoopHandler(out CoopHandler coopHandler))
+            if (!CoopHandler.TryGetCoopHandler(out CoopHandler coopHandler) ||
+                !coopHandler.Players.TryGetValue(packet.netID, out _)) 
+                return;
+                
+            WorldInteractiveObject worldInteractiveObject = Singleton<GameWorld>.Instance.FindDoor(packet.objectID);
+
+            if (worldInteractiveObject == null || 
+                !worldInteractiveObject.isActiveAndEnabled) 
+                return;
+                
+            // Convert from int in the packet to the enum above
+            // (Can't send an enum value as part of a packet, apparently)
+            GameObjectType gameObjectType = (GameObjectType)packet.objectType;
+
+            switch (gameObjectType)
             {
-                if (coopHandler.Players.TryGetValue(packet.netID, out CoopPlayer player))
+                // Handle logic for ApplyHitPatch.OpenDoorIfNotAlreadyOpen on the recipient
+                case GameObjectType.Door:
                 {
-                    WorldInteractiveObject worldInteractiveObject = Singleton<GameWorld>.Instance.FindDoor(packet.objectID);
-                    if (worldInteractiveObject != null && worldInteractiveObject.isActiveAndEnabled)
+                    Door door = (Door)worldInteractiveObject;
+
+                    if (door.DoorState != EDoorState.Open)
                     {
-                        // Convert from int in the packet to the enum above
-                        // (Can't send an enum value as part of a packet, apparently)
-                        GameObjectType gameObjectType = (GameObjectType)packet.objectType;
-
-                        switch (gameObjectType)
-                        {
-                            // Handle logic for ApplyHitPatch.OpenDoorIfNotAlreadyOpen on the recipient
-                            case GameObjectType.Door:
-                                {
-                                    Door door = (Door)worldInteractiveObject;
-
-                                    if (door.DoorState != EDoorState.Open)
-                                    {
-                                        door.DoorState = EDoorState.Shut;
-                                        //player.CurrentManagedState.ExecuteDoorInteraction(container, new InteractionResult(EInteractionType.Breach), null, player);
-                                        door.KickOpen(true);
-                                        coopHandler.MyPlayer.UpdateInteractionCast();
-                                    }
-
-                                    break;
-                                }
-                            case GameObjectType.Container:
-                                {
-                                    LootableContainer container = (LootableContainer)worldInteractiveObject;
-
-                                    if (container.DoorState != EDoorState.Open)
-                                    {
-                                        container.DoorState = EDoorState.Shut;
-                                        container.Open();
-                                    }
-
-                                    break;
-                                }
-                            case GameObjectType.Trunk:
-                                {
-                                    Trunk trunk = (Trunk)worldInteractiveObject;
-
-                                    if (trunk.DoorState != EDoorState.Open)
-                                    {
-                                        trunk.DoorState = EDoorState.Shut;
-                                        trunk.Open();
-                                    }
-
-                                    break;
-                                }
-                        }
-
-                        if (FikaBackendUtils.IsServer)
-                        {
-                            Singleton<FikaServer>.Instance.SendDataToAll(ref packet, DeliveryMethod.ReliableOrdered);
-                        }
+                        door.DoorState = EDoorState.Shut;
+                        //player.CurrentManagedState.ExecuteDoorInteraction(container, new InteractionResult(EInteractionType.Breach), null, player);
+                        door.KickOpen(true);
+                        coopHandler.MyPlayer.UpdateInteractionCast();
                     }
+                    break;
                 }
+                case GameObjectType.Container:
+                {
+                    LootableContainer container = (LootableContainer)worldInteractiveObject;
+
+                    if (container.DoorState != EDoorState.Open)
+                    {
+                        container.DoorState = EDoorState.Shut;
+                        container.Open();
+                    }
+
+                    break;
+                }
+                case GameObjectType.Trunk:
+                {
+                    Trunk trunk = (Trunk)worldInteractiveObject;
+
+                    if (trunk.DoorState != EDoorState.Open)
+                    {
+                        trunk.DoorState = EDoorState.Shut;
+                        trunk.Open();
+                    }
+
+                    break;
+                }
+            }
+
+            if (FikaBackendUtils.IsServer)
+            {
+                Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered, true);
+            }
+        }
+        
+        private static async Task<ModConfig> LoadFromServer()
+        {
+            try
+            {
+                string payload = await RequestHandler.GetJsonAsync("/backdoorbandit/load");
+                
+                return JsonConvert.DeserializeObject<ModConfig>(payload);
+            }
+            catch (Exception ex)
+            {
+                NotificationManagerClass.DisplayWarningNotification("Failed to load Backdoor Bandit server config - check the server");
+                
+                return null;
             }
         }
     }
