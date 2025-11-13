@@ -52,8 +52,8 @@ namespace DoorBreach
             effectsInstance = Singleton<Effects>.Instance;
 
             // Preload Audio Clips
-            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "\\DoorBreach\\audio\\Beep.mp3", true));
-            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "\\DoorBreach\\audio\\FinalBeepTone.mp3", false));
+            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "\\BackdoorBandit\\audio\\Beep.mp3", true));
+            StartCoroutine(LoadAudioClip(BepInEx.Paths.PluginPath + "\\BackdoorBandit\\audio\\FinalBeepTone.mp3", false));
         }
 
         private IEnumerator LoadAudioClip(string filePath, bool isBeepClip)
