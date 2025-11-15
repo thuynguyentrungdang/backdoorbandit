@@ -1,0 +1,110 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <RootNamespace>DoorBreachFika</RootNamespace>
+        <AssemblyName>DoorBreachFika</AssemblyName>
+        <LangVersion>latest</LangVersion>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <Nullable>enable</Nullable>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="Fika.Core">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\Fika.Core.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="ItemComponent.Types">
+            <HintPath>D:\ref4\ItemComponent.Types.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="PhysicsModule">
+            <HintPath>D:\ref4\UnityEngine.PhysicsModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="0Harmony">
+            <HintPath>D:\ref4\0Harmony.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="spt-common">
+            <HintPath>D:\ref4\spt-common.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="spt-reflection">
+            <HintPath>D:\ref4\spt-reflection.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Assembly-CSharp">
+            <HintPath>D:\ref4\Assembly-CSharp.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="BepInEx">
+            <HintPath>D:\ref4\BepInEx.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Comfort">
+            <HintPath>D:\ref4\Comfort.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Comfort.Unity">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\Comfort.Unity.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Newtonsoft.Json">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\Newtonsoft.Json.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Sirenix.Serialization">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\Sirenix.Serialization.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Unity.TextMeshPro">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\Unity.TextMeshPro.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>D:\ref4\UnityEngine.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.AssetBundleModule">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\UnityEngine.AssetBundleModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>D:\ref4\UnityEngine.CoreModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.IMGUIModule">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\UnityEngine.IMGUIModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.InputLegacyModule">
+            <HintPath>D:\ref4\UnityEngine.InputLegacyModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\UnityEngine.TextRenderingModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+            <SpecificVersion>False</SpecificVersion>
+            <HintPath>D:\ref4\UnityEngine.UI.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BackdoorBandit.csproj">
+            <Project>{30D38A81-B688-474D-A40A-47BFC63BFE69}</Project>
+            <Name>BackdoorBandit</Name>
+        </ProjectReference>
+    </ItemGroup>
+
+</Project>
