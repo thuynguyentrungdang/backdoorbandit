@@ -1,222 +1,218 @@
 ﻿using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using BepInEx.Logging;
 using Comfort.Common;
 using EFT;
 using EFT.Interactive;
-using Newtonsoft.Json;
 using UnityEngine;
-
 
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable IDE0007 // Use implicit type
 
-namespace DoorBreach
+namespace DoorBreach;
+
+public class DoorBreachComponent : MonoBehaviour
 {
-    internal class DoorBreachComponent : MonoBehaviour
+    private static int doorCount = 0;
+    private static int invalidStateCount = 0;
+    private static int inoperableCount = 0;
+    private static int invalidLayerCount = 0;
+    private static int containerCount = 0;
+    private static int invalidContainers = 0;
+    private static int inoperatableContainers = 0;
+    private static int invalidContainerLayer = 0;
+    private static int trunkCount = 0;
+    private static int invalidCarTrunks = 0;
+    private static int inoperatableTrunks = 0;
+    private static int invalidTrunkLayer = 0;
+
+    private static List<string> GrenadeLaunchers;
+    public static List<string> MeleeWeapons;
+    private static List<string> ShotgunWeapons;
+    private static List<string> OtherWeapons;
+    public static List<string> ApplicableWeapons;
+    public static List<string> MarkedRooms;
+    public static List<string> ValidRounds;
+    public static ManualLogSource Logger
     {
-        private static int doorCount = 0;
-        private static int invalidStateCount = 0;
-        private static int inoperableCount = 0;
-        private static int invalidLayerCount = 0;
-        private static int containerCount = 0;
-        private static int invalidContainers = 0;
-        private static int inoperatableContainers = 0;
-        private static int invalidContainerLayer = 0;
-        private static int trunkCount = 0;
-        private static int invalidCarTrunks = 0;
-        private static int inoperatableTrunks = 0;
-        private static int invalidTrunkLayer = 0;
+        get; private set;
+    }
 
-        internal static List<string> GrenadeLaunchers;
-        internal static List<string> MeleeWeapons;
-        internal static List<string> ShotgunWeapons;
-        internal static List<string> OtherWeapons;
-        internal static List<string> ApplicableWeapons;
-        internal static List<string> MarkedRooms;
-        internal static List<string> ValidRounds;
-        internal static ManualLogSource Logger
+    private DoorBreachComponent()
+    {
+        if (Logger == null)
         {
-            get; private set;
+            Logger = BepInEx.Logging.Logger.CreateLogSource(nameof(DoorBreachComponent));
         }
+    }
 
-        private DoorBreachComponent()
-        {
-            if (Logger == null)
-            {
-                Logger = BepInEx.Logging.Logger.CreateLogSource(nameof(DoorBreachComponent));
-            }
-        }
+    public void Awake()
+    {
+        doorCount = 0;
+        invalidStateCount = 0;
+        inoperableCount = 0;
+        invalidLayerCount = 0;
+        containerCount = 0;
+        invalidContainers = 0;
+        inoperatableContainers = 0;
+        invalidContainerLayer = 0;
+        trunkCount = 0;
+        invalidCarTrunks = 0;
+        inoperatableTrunks = 0;
+        invalidTrunkLayer = 0;
+        ApplicableWeapons = [];
 
-        public void Awake()
-        {
-            doorCount = 0;
-            invalidStateCount = 0;
-            inoperableCount = 0;
-            invalidLayerCount = 0;
-            containerCount = 0;
-            invalidContainers = 0;
-            inoperatableContainers = 0;
-            invalidContainerLayer = 0;
-            trunkCount = 0;
-            invalidCarTrunks = 0;
-            inoperatableTrunks = 0;
-            invalidTrunkLayer = 0;
-            ApplicableWeapons = [];
-
-            GrenadeLaunchers = DoorBreachPlugin.ModConfig.GrenadeLauncherList;
-            MeleeWeapons = DoorBreachPlugin.ModConfig.MeleeWeaponList;
-            ShotgunWeapons = DoorBreachPlugin.ModConfig.ShotgunList;
-            OtherWeapons = DoorBreachPlugin.ModConfig.OtherWeaponList;
-            MarkedRooms = DoorBreachPlugin.ModConfig.BlacklistedRooms;
-            ValidRounds = DoorBreachPlugin.ModConfig.WhitelistedRounds;
+        GrenadeLaunchers = DoorBreachPlugin.ModConfig.GrenadeLauncherList;
+        MeleeWeapons = DoorBreachPlugin.ModConfig.MeleeWeaponList;
+        ShotgunWeapons = DoorBreachPlugin.ModConfig.ShotgunList;
+        OtherWeapons = DoorBreachPlugin.ModConfig.OtherWeaponList;
+        MarkedRooms = DoorBreachPlugin.ModConfig.BlacklistedRooms;
+        ValidRounds = DoorBreachPlugin.ModConfig.WhitelistedRounds;
+        
+        int interactiveLayer = LayerMask.NameToLayer("Interactive");
             
-            SetupApplicableWeapons();
+        SetupApplicableWeapons();
 
-            ProcessObjectsOfType<Door>("Doors", DoorBreachPlugin.interactiveLayer);
-            ProcessObjectsOfType<LootableContainer>("Containers", DoorBreachPlugin.interactiveLayer);
-            ProcessObjectsOfType<Trunk>("Trunks", DoorBreachPlugin.interactiveLayer);
+        ProcessObjectsOfType<Door>("Doors", interactiveLayer);
+        ProcessObjectsOfType<LootableContainer>("Containers", interactiveLayer);
+        ProcessObjectsOfType<Trunk>("Trunks", interactiveLayer);
 
-            LogStatistics("Doors", doorCount, invalidStateCount, inoperableCount, invalidLayerCount);
-            LogStatistics("Containers", containerCount, invalidContainers, inoperatableContainers, invalidContainerLayer);
-            LogStatistics("Trunks", trunkCount, invalidCarTrunks, inoperatableTrunks, invalidTrunkLayer);
-        }
+        LogStatistics("Doors", doorCount, invalidStateCount, inoperableCount, invalidLayerCount);
+        LogStatistics("Containers", containerCount, invalidContainers, inoperatableContainers, invalidContainerLayer);
+        LogStatistics("Trunks", trunkCount, invalidCarTrunks, inoperatableTrunks, invalidTrunkLayer);
+    }
 
-        private void ProcessObjectsOfType<T>(string objectType, int interactiveLayer) where T : Component
+    private void ProcessObjectsOfType<T>(string objectType, int interactiveLayer) where T : Component
+    {
+        Logger.LogInfo($"Processing {objectType}...");
+        int count = 0;
+        int invalidCount = 0;
+        int inoperableCount = 0;
+        int invalidLayerCount = 0;
+
+        FindObjectsOfType<T>().ExecuteForEach(obj =>
         {
-            Logger.LogInfo($"Processing {objectType}...");
-            int count = 0;
-            int invalidCount = 0;
-            int inoperableCount = 0;
-            int invalidLayerCount = 0;
+            count++;
 
-            FindObjectsOfType<T>().ExecuteForEach(obj =>
-            {
-                count++;
+            if (!IsValidObject(obj, ref invalidCount, ref inoperableCount, ref invalidLayerCount, interactiveLayer))
+                return;
 
-                if (!IsValidObject(obj, ref invalidCount, ref inoperableCount, ref invalidLayerCount, interactiveLayer))
-                    return;
-
-                int randHitPoints = Random.Range(DoorBreachPlugin.MinHitPoints.Value, DoorBreachPlugin.MaxHitPoints.Value);
-                Hitpoints hitpoints = obj.gameObject.GetOrAddComponent<Hitpoints>();
+            int randHitPoints = Random.Range(DoorBreachPlugin.MinHitPoints.Value, DoorBreachPlugin.MaxHitPoints.Value);
+            Hitpoints hitpoints = obj.gameObject.GetOrAddComponent<Hitpoints>();
                 
-                hitpoints.hitpoints = randHitPoints;
+            hitpoints.hitpoints = randHitPoints;
 
-                switch (obj)
-                {
-                    case Door door:
-                        door.OnEnable();
-                        break;
-                    case LootableContainer container:
-                        container.OnEnable();
-                        break;
-                    case Trunk trunk:
-                        trunk.OnEnable();
-                        break;
-                }
-            });
-
-            LogStatistics(objectType, count, invalidCount, inoperableCount, invalidLayerCount);
-        }
-
-        private bool IsOperatable<T>(T obj) where T : Component
-        {
             switch (obj)
             {
                 case Door door:
-                    return door.Operatable;
+                    door.OnEnable();
+                    break;
                 case LootableContainer container:
-                    return container.Operatable;
+                    container.OnEnable();
+                    break;
                 case Trunk trunk:
-                    return trunk.Operatable;
-                default:
-                    // Default case: assume operatable if not one of the specific types
-                    return true;
+                    trunk.OnEnable();
+                    break;
             }
-        }
+        });
 
-        private bool IsValidObject<T>(T obj, ref int invalidCount, ref int inoperableCount, ref int invalidLayerCount, int interactiveLayer) where T : Component
+        LogStatistics(objectType, count, invalidCount, inoperableCount, invalidLayerCount);
+    }
+
+    private bool IsOperatable<T>(T obj) where T : Component
+    {
+        switch (obj)
         {
-            if (obj is Door door && 
-                !IsValidDoorState(door) || 
-                obj is LootableContainer container && 
-                !IsValidContainerState(container) || 
-                obj is Trunk trunk && !IsValidTrunkState(trunk))
-            {
-                invalidCount++;
-                return false;
-            }
-
-            if (!IsOperatable(obj))
-            {
-                inoperableCount++;
-                return false;
-            }
-
-            if (IsValidLayer(obj, interactiveLayer)) 
+            case Door door:
+                return door.Operatable;
+            case LootableContainer container:
+                return container.Operatable;
+            case Trunk trunk:
+                return trunk.Operatable;
+            default:
+                // Default case: assume operatable if not one of the specific types
                 return true;
-            
-            invalidLayerCount++;
-            return false;
-
-        }
-
-        private bool IsValidDoorState(Door door)
-        {
-            if(door.DoorState == EDoorState.Shut || 
-               door.DoorState == EDoorState.Locked || 
-               door.DoorState == EDoorState.Breaching || 
-               door.DoorState == EDoorState.Open)
-                return true;
-
-            return false;
-        }
-
-        private bool IsValidContainerState(LootableContainer container) =>
-            container.DoorState == EDoorState.Shut || 
-            container.DoorState == EDoorState.Locked || 
-            container.DoorState == EDoorState.Breaching;
-
-        private bool IsValidTrunkState(Trunk trunk) =>
-            trunk.DoorState == EDoorState.Shut || 
-            trunk.DoorState == EDoorState.Locked || 
-            trunk.DoorState == EDoorState.Breaching;
-
-        private bool IsValidLayer<T>(T obj, int interactiveLayer) where T : Component =>
-            obj.gameObject.layer == interactiveLayer;
-
-        private void LogStatistics(string objectType, int totalCount, int invalidStateCount, int inoperableCount, int invalidLayerCount)
-        {
-            Logger.LogInfo($"Total {objectType}: {totalCount}");
-            Logger.LogInfo($"Invalid State {objectType}: {invalidStateCount}");
-            Logger.LogInfo($"Inoperable {objectType}: {inoperableCount}");
-            Logger.LogInfo($"Invalid Layer {objectType}: {invalidLayerCount}");
-        }
-
-        public static void Enable()
-        {
-            GameWorld gameWorld = Singleton<GameWorld>.Instance;
-            gameWorld.GetOrAddComponent<DoorBreachComponent>();
-        }
-
-        internal static void SetupApplicableWeapons()
-        {
-            ApplicableWeapons.AddRange(MeleeWeapons);
-            ApplicableWeapons.AddRange(GrenadeLaunchers);
-            ApplicableWeapons.AddRange(ShotgunWeapons);
-            ApplicableWeapons.AddRange(OtherWeapons);
-            
-#if DEBUG
-            //print out applicable weapons hashes to console
-            Logger.LogDebug("Applicable Weapons:");
-            
-            foreach (string weapon in ApplicableWeapons)
-            {
-                Logger.LogDebug(weapon);
-            }
-#endif
         }
     }
-}
 
+    private bool IsValidObject<T>(T obj, ref int invalidCount, ref int inoperableCount, ref int invalidLayerCount, int interactiveLayer) where T : Component
+    {
+        if (obj is Door door && 
+            !IsValidDoorState(door) || 
+            obj is LootableContainer container && 
+            !IsValidContainerState(container) || 
+            obj is Trunk trunk && !IsValidTrunkState(trunk))
+        {
+            invalidCount++;
+            return false;
+        }
+
+        if (!IsOperatable(obj))
+        {
+            inoperableCount++;
+            return false;
+        }
+
+        if (IsValidLayer(obj, interactiveLayer)) 
+            return true;
+            
+        invalidLayerCount++;
+        return false;
+
+    }
+
+    private bool IsValidDoorState(Door door)
+    {
+        if(door.DoorState == EDoorState.Shut || 
+           door.DoorState == EDoorState.Locked || 
+           door.DoorState == EDoorState.Breaching || 
+           door.DoorState == EDoorState.Open)
+            return true;
+
+        return false;
+    }
+
+    private bool IsValidContainerState(LootableContainer container) =>
+        container.DoorState == EDoorState.Shut || 
+        container.DoorState == EDoorState.Locked || 
+        container.DoorState == EDoorState.Breaching;
+
+    private bool IsValidTrunkState(Trunk trunk) =>
+        trunk.DoorState == EDoorState.Shut || 
+        trunk.DoorState == EDoorState.Locked || 
+        trunk.DoorState == EDoorState.Breaching;
+
+    private bool IsValidLayer<T>(T obj, int interactiveLayer) where T : Component =>
+        obj.gameObject.layer == interactiveLayer;
+
+    private void LogStatistics(string objectType, int totalCount, int invalidStateCount, int inoperableCount, int invalidLayerCount)
+    {
+        Logger.LogInfo($"Total {objectType}: {totalCount}");
+        Logger.LogInfo($"Invalid State {objectType}: {invalidStateCount}");
+        Logger.LogInfo($"Inoperable {objectType}: {inoperableCount}");
+        Logger.LogInfo($"Invalid Layer {objectType}: {invalidLayerCount}");
+    }
+
+    public static void Enable()
+    {
+        GameWorld gameWorld = Singleton<GameWorld>.Instance;
+        gameWorld.GetOrAddComponent<DoorBreachComponent>();
+    }
+
+    public static void SetupApplicableWeapons()
+    {
+        ApplicableWeapons.AddRange(MeleeWeapons);
+        ApplicableWeapons.AddRange(GrenadeLaunchers);
+        ApplicableWeapons.AddRange(ShotgunWeapons);
+        ApplicableWeapons.AddRange(OtherWeapons);
+            
+#if DEBUG
+        //print out applicable weapons hashes to console
+        Logger.LogDebug("Applicable Weapons:");
+            
+        foreach (string weapon in ApplicableWeapons)
+        {
+            Logger.LogDebug(weapon);
+        }
+#endif
+    }
+}

@@ -1,6 +1,6 @@
 ﻿using Fika.Core.Networking.LiteNetLib.Utils;
 
-namespace DoorBreach
+namespace DoorBreachFika.Packets
 {
     public struct SyncOpenStatePacket : INetSerializable
     {
