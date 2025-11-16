@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using DoorBreach;
 using EFT;
 using EFT.InventoryLogic;
@@ -8,10 +9,13 @@ using SPT.Reflection.Patching;
 
 namespace DoorBreachFika.Patches;
 
-[HarmonyPatch(typeof(ExplosiveBreachComponent))]
-[HarmonyPatch(nameof(ExplosiveBreachComponent.RemoveItemFromPlayerInventory))]
-public class RemoveItemFromPlayerInventoryPatch
+public class RemoveItemFromPlayerInventoryPatch: ModulePatch
 {
+    protected override MethodBase GetTargetMethod()
+    {
+        return AccessTools.Method(typeof(ExplosiveBreachComponent), nameof(ExplosiveBreachComponent.RemoveItemFromPlayerInventory));
+    }
+    
     [PatchPrefix]
     private static void PatchPrefix(Player ___player, string ___C4ExplosiveId)
     {
@@ -48,4 +52,6 @@ public class RemoveItemFromPlayerInventoryPatch
 
         inventoryController.TryRunNetworkTransaction(discardResult, null);
     }
+
+    
 }

@@ -1,13 +1,14 @@
-﻿using DoorBreach.Fika;
+﻿using BepInEx;
+using DoorBreach.Fika;
 using DoorBreachFika.Fika;
-using DoorBreachFika.Patches;
 using HarmonyLib;
 
 namespace DoorBreachFika;
 
-public class Plugin
+[BepInPlugin("com.dvize.backdoorbanditfika", "BackdoorBanditFika", "1.0.0")]
+public class Plugin: BaseUnityPlugin
 {
-    public static void Init()
+    public void Awake()
     {
         FikaMethods.PluginEnabled();
         FikaBridge.SendPlantC4PacketEmitted += FikaMethods.SendC4PlantPacket;

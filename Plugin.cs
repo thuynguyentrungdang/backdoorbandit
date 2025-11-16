@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using DoorBreach.Patches;
 using BepInEx;
@@ -11,8 +10,7 @@ using SPT.Common.Http;
 
 namespace DoorBreach
 {
-    [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)] 
-    [BepInPlugin("com.dvize.BackdoorBandit", "dvize.BackdoorBandit", "1.11.1")]
+    [BepInPlugin("com.dvize.BackdoorBandit", "dvize.BackdoorBandit", "2.0.1")]
     public class DoorBreachPlugin : BaseUnityPlugin
     {
         public static ConfigEntry<bool> PlebMode;
@@ -39,7 +37,6 @@ namespace DoorBreach
 
         private async void Awake()
         {
-            FikaInstalled = Chainloader.PluginInfos.ContainsKey("com.fika.core");
             ModConfig = await LoadFromServer();
 
             PlebMode = Config.Bind(
@@ -135,33 +132,6 @@ namespace DoorBreach
             new ActionMenuKeyCardPatch().Enable();
             new PerfectCullingNullRefPatch().Enable();
             new OnGameStartedPatch().Enable();
-
-            TryInitFikaAssembly();
-        }
-        
-        public void TryInitFikaAssembly()
-        {
-            if (!FikaInstalled)
-                return;
-            
-            try
-            {
-                var fikaAssembly = Assembly.Load("BackdoorBanditFika");
-                
-                if (fikaAssembly == null) 
-                    return;
-                
-                Type main = fikaAssembly.GetType("DoorBreachFika.Plugin");
-                MethodInfo initMethod = main.GetMethod("Init", BindingFlags.Public | BindingFlags.Static);
-                
-                initMethod.Invoke(main, null);
-                
-                Logger.LogInfo("Fika assembly found, initialized Fika integration.");
-            }
-            catch (Exception)
-            {
-                Logger.LogInfo("Fika assembly not found, skipping Fika integration.");
-            }
         }
         
         private static async Task<ModConfig> LoadFromServer()
