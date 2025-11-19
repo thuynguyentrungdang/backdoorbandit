@@ -196,6 +196,10 @@ public class ExplosiveBreachComponent : MonoBehaviour
     public static void RemoveItemFromPlayerInventory(Player player)
     {
         DoorBreachComponent.Logger.LogInfo("[BackdoorBandit] RemoveItemFromPlayerInventory called.");
+
+        if (player == null)
+            return;
+        
         IEnumerable<Item> items = player.Inventory.GetPlayerItems(EPlayerItems.Equipment);
         Item foundItem = null;
 

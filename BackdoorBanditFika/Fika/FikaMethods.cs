@@ -1,4 +1,5 @@
-﻿using Comfort.Common;
+﻿using System.Net.Mime;
+using Comfort.Common;
 using DoorBreach;
 using DoorBreachFika.Packets;
 using EFT;
@@ -10,6 +11,7 @@ using Fika.Core.Modding;
 using Fika.Core.Modding.Events;
 using Fika.Core.Networking;
 using Fika.Core.Networking.LiteNetLib;
+using UnityEngine;
 
 namespace DoorBreachFika.Fika;
 
@@ -17,69 +19,60 @@ public class FikaMethods
 {
     public static void PluginEnabled()
     {
-        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] Plugin enabled.");
         FikaEventDispatcher.SubscribeEvent<FikaNetworkManagerCreatedEvent>(OnFikaNetworkManagerCreated);
     }
     
-    public static void SendC4PlantPacket(Player player, string doorID, int c4Timer)
+    public static void SendC4PlantPacket(int netId, string doorID, int c4Timer)
     {
-        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] Sending Plant C4 Packet via FikaMethods from player ID: " + player.Id);
-        
-        FikaPlayer? fikaPlayer = player as FikaPlayer;
-
-        if (fikaPlayer == null)
-            return;
+        Plugin.Logger.LogInfo("[BackdoorBanditFika] Sending Plant C4 Packet via FikaMethods from player ID: " + netId);
         
         PlantC4Packet packet = new PlantC4Packet
         {
-            netID = fikaPlayer.Id,
+            netID = netId,
             doorID = doorID,
             C4Timer = c4Timer,
         };
 
-        if (FikaBackendUtils.IsServer)
+        if (FikaBackendUtils.IsServer ||
+            FikaBackendUtils.IsHeadless)
         {
-            DoorBreachComponent.Logger
-                .LogInfo("[BackdoorBanditFika] Broadcasting Plant C4 Packet via FikaMethods from server ID: " + player.Id);
+            Plugin.Logger
+                .LogInfo("[BackdoorBanditFika] Broadcasting Plant C4 Packet via FikaMethods from server ID: " + netId);
             // Forward the packet to all clients
             Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered, true);
             // ReliableOrdered = ensures the packet is received, re-sends it if it fails
         }
         else if (FikaBackendUtils.IsClient)
         {
-            DoorBreachComponent.Logger
-                .LogInfo("[BackdoorBanditFika] Sending Plant C4 Packet via FikaMethods from player ID: " + player.Id);
+            Plugin.Logger
+                .LogInfo("[BackdoorBanditFika] Sending Plant C4 Packet via FikaMethods from player ID: " + netId);
             // If we're a client, send it to the host so they can forward it (Check Plugin.cs for behavior)
             Singleton<FikaClient>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered);
         }
     }
 
-    public static void SendSyncOpenStatePacket(Player player, string objectId, int objectType)
+    public static void SendSyncOpenStatePacket(int netId, string objectId, int objectType)
     {
-        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] Sending Sync Open State Packet via FikaMethods from player ID: " + player.Id);
-        
-        FikaPlayer? fikaPlayer = player as FikaPlayer;
-
-        if (fikaPlayer == null)
-            return;
+        Plugin.Logger.LogInfo("[BackdoorBanditFika] Sending Sync Open State Packet via FikaMethods from player ID: " + netId);
         
         SyncOpenStatePacket packet = new SyncOpenStatePacket()
         {
-            netID = fikaPlayer.Id,
+            netID = netId,
             objectID = objectId,
             objectType = objectType
         };
 
-        if (FikaBackendUtils.IsServer)
+        if (FikaBackendUtils.IsServer ||
+            FikaBackendUtils.IsHeadless)
         {
-            DoorBreachComponent.Logger
-                .LogInfo("[BackdoorBanditFika] Broadcasting Sync Open State Packet via FikaMethods from server ID: " + player.Id);
+            Plugin.Logger
+                .LogInfo("[BackdoorBanditFika] Broadcasting Sync Open State Packet via FikaMethods from server ID: " + netId);
             Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered, true);
         }
         else if (FikaBackendUtils.IsClient)
         {
-            DoorBreachComponent.Logger
-                .LogInfo("[BackdoorBanditFika] Sending Sync Open State Packet via FikaMethods from player ID: " + player.Id);
+            Plugin.Logger
+                .LogInfo("[BackdoorBanditFika] Sending Sync Open State Packet via FikaMethods from player ID: " + netId);
             Singleton<FikaClient>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered);
         }
     }
@@ -104,15 +97,15 @@ public class FikaMethods
         if (FikaBackendUtils.IsServer ||
             FikaBackendUtils.IsHeadless)
         {
-            DoorBreachComponent.Logger.LogInfo(
+            Plugin.Logger.LogInfo(
                 "[BackdoorBanditFika] Forwarding Plant C4 Packet to all clients via FikaMethods from packet ID: " +
                 packet.netID);
             // If the host receives the packet from a client, now forward this packet to all clients (excluding arg2 - the person who sent it).
-            Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered, true);
+            SendC4PlantPacket(packet.netID, packet.doorID, packet.C4Timer);
             return;
         }
         
-        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] Received Plant C4 Packet via FikaMethods from packet ID: " + packet.netID);
+        Plugin.Logger.LogInfo("[BackdoorBanditFika] Received Plant C4 Packet via FikaMethods from packet ID: " + packet.netID);
 
         if (!CoopHandler.TryGetCoopHandler(out CoopHandler coopHandler) ||
             !coopHandler.Players.TryGetValue(packet.netID, out FikaPlayer player)) 
@@ -135,18 +128,19 @@ public class FikaMethods
         if (FikaBackendUtils.IsServer ||
             FikaBackendUtils.IsHeadless)
         {
-            DoorBreachComponent.Logger.LogInfo(
+            Plugin.Logger.LogInfo(
                 "[BackdoorBanditFika] Forwarding Sync Open State Packet to all clients via FikaMethods from packet ID: " +
                 packet.netID);
-            Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableOrdered, true);
+            SendSyncOpenStatePacket(packet.netID, packet.objectID, packet.objectType);
+            return;
         }
         
-        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] Received Sync Open State Packet via FikaMethods from packet ID: " + packet.netID);
+        Plugin.Logger.LogInfo("[BackdoorBanditFika] Received Sync Open State Packet via FikaMethods from packet ID: " + packet.netID);
 
         if (!CoopHandler.TryGetCoopHandler(out CoopHandler coopHandler) ||
             !coopHandler.Players.TryGetValue(packet.netID, out _))
         {
-            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] CoopHandler or Player not found for Sync Open State Packet.");
+            Plugin.Logger.LogError("[BackdoorBanditFika] CoopHandler or Player not found for Sync Open State Packet.");
             return;
         }
 

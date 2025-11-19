@@ -20,11 +20,11 @@ public class RemoveItemFromPlayerInventoryPatch: ModulePatch
     [PatchPrefix]
     private static bool PatchPrefix(Player ___player, string ___C4ExplosiveId)
     {
-        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] RemoveItemFromPlayerInventoryPatch called.");
+        Plugin.Logger.LogInfo("[BackdoorBanditFika] RemoveItemFromPlayerInventoryPatch called.");
 
         if (___player is not FikaPlayer fikaPlayer)
         {
-            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] Player is not a FikaPlayer.");
+            Plugin.Logger.LogError("[BackdoorBanditFika] Player is not a FikaPlayer.");
             return true;
         }
         
@@ -42,27 +42,27 @@ public class RemoveItemFromPlayerInventoryPatch: ModulePatch
         
         if (fikaPlayer == null)
         {
-            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] fikaPlayer is null.");
+            Plugin.Logger.LogError("[BackdoorBanditFika] fikaPlayer is null.");
             return true;
         }
 
         InventoryController inventoryController = fikaPlayer.InventoryController;
 
-        DoorBreachComponent.Logger.LogInfo($"Attempting to remove C4 from player inventory. Player ID: {fikaPlayer.NetId}");
+        Plugin.Logger.LogInfo($"Attempting to remove C4 from player inventory. Player ID: {fikaPlayer.NetId}");
 
         if (foundItem == null)
         {
-            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] foundItem is null.");
+            Plugin.Logger.LogError("[BackdoorBanditFika] foundItem is null.");
             return true;
         }
 
-        DoorBreachComponent.Logger.LogInfo($"Removing C4 with ID: {foundItem?.Id} from player inventory.");
+        Plugin.Logger.LogInfo($"Removing C4 with ID: {foundItem?.Id} from player inventory.");
 
         GStruct153 discardResult = InteractionsHandlerClass.Discard(foundItem, inventoryController, true);
 
         if (discardResult.Failed)
         {
-            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] discardResult failed.");
+            Plugin.Logger.LogError("[BackdoorBanditFika] discardResult failed.");
             return true;
         }
 
