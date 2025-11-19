@@ -195,6 +195,7 @@ public class ExplosiveBreachComponent : MonoBehaviour
         
     public static void RemoveItemFromPlayerInventory(Player player)
     {
+        DoorBreachComponent.Logger.LogInfo("[BackdoorBandit] RemoveItemFromPlayerInventory called.");
         IEnumerable<Item> items = player.Inventory.GetPlayerItems(EPlayerItems.Equipment);
         Item foundItem = null;
 
@@ -224,7 +225,7 @@ public class ExplosiveBreachComponent : MonoBehaviour
             return;
         }
 
-        inventoryController.TryRunNetworkTransaction(discardResult, null);
+        inventoryController.TryRunNetworkTransaction(discardResult);
     }
 
     private static void StartDelayedExplosionCoroutine(Door door, Player player, MonoBehaviour monoBehaviour, C4Instance c4Instance)

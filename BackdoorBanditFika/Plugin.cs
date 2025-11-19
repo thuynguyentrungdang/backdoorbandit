@@ -1,6 +1,8 @@
 ﻿using BepInEx;
+using DoorBreach;
 using DoorBreach.Fika;
 using DoorBreachFika.Fika;
+using DoorBreachFika.Patches;
 using HarmonyLib;
 
 namespace DoorBreachFika;
@@ -10,11 +12,13 @@ public class Plugin: BaseUnityPlugin
 {
     public void Awake()
     {
+        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] Plugin awoken.");
+        
         FikaMethods.PluginEnabled();
+        
+        new RemoveItemFromPlayerInventoryPatch().Enable();
+        
         FikaBridge.SendPlantC4PacketEmitted += FikaMethods.SendC4PlantPacket;
         FikaBridge.SendSyncOpenStatePacketEmitted += FikaMethods.SendSyncOpenStatePacket;
-
-        Harmony harmony = new Harmony("DoorBreach");
-        harmony.PatchAll();
     }
 }

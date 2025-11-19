@@ -1,8 +1,8 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
 using System.Reflection;
-using HarmonyLib;
 using SPT.Reflection.Patching;
 using Koenigz.PerfectCulling;
+using Koenigz.PerfectCulling.EFT;
 using UnityEngine;
 
 namespace DoorBreach.Patches
@@ -12,25 +12,55 @@ namespace DoorBreach.Patches
         protected override MethodBase GetTargetMethod() => typeof(PerfectCullingBakeGroup).GetMethod(nameof(PerfectCullingBakeGroup.Toggle));
         
         [PatchPrefix]
-        private static bool Prefix(
-            PerfectCullingBakeGroup __instance,
-            ref int ___Int_0,
-            ref PerfectCullingBakeGroup.RuntimeGroupContent[] ___RuntimeGroupContent_0
-        )
+        private static bool Prefix(PerfectCullingBakeGroup __instance,
+                                    ref int ___Int_0,
+                                    PerfectCullingBakeGroup.RuntimeGroupContent[] ___RuntimeGroupContent_0,
+                                    bool rendererEnabled)
         {
-            // Null-safety: replace null array with empty
-            if (___RuntimeGroupContent_0 == null)
+            if (__instance.runtimeProxies != null)
             {
-                ___RuntimeGroupContent_0 = [];
-                ___Int_0 = 0;
+                Renderer[] array = __instance.runtimeProxies;
+                for (int i = 0; i < array.Length; i++)
+                {
+                    array[i].enabled = !rendererEnabled;
+                }
             }
-
-            // Clamp Int0 to avoid out-of-bounds
+            
+            if (__instance.cullingLightObjects != null)
+            {
+                foreach (CullingObject cullingObject in __instance.cullingLightObjects)
+                {
+                    if (cullingObject != null)
+                    {
+                        cullingObject.SetAutocullVisibility(rendererEnabled);
+                    }
+                }
+            }
+            if (__instance.analyticSources != null)
+            {
+                foreach (AnalyticSource analyticSource in __instance.analyticSources)
+                {
+                    if (analyticSource != null)
+                    {
+                        analyticSource.IsAutocullVisible = rendererEnabled;
+                    }
+                }
+            }
+            if (__instance.screenDistanceSwitcher != null)
+            {
+                __instance.screenDistanceSwitcher.IsBakedAutocullVisible = rendererEnabled;
+            }
+            
             if (___Int_0 > ___RuntimeGroupContent_0.Length)
                 ___Int_0 = ___RuntimeGroupContent_0.Length;
-
-            // Original method runs safely
-            return true;
+            
+            for (int j = 0; j < ___Int_0; j++)
+            {
+                if (___RuntimeGroupContent_0[j].Renderer != null)
+                    ___RuntimeGroupContent_0[j].Renderer.enabled = rendererEnabled;
+            }
+            
+            return false;
         }
     }
 }

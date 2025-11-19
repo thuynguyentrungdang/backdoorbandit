@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using DoorBreach;
 using EFT;
@@ -17,9 +18,17 @@ public class RemoveItemFromPlayerInventoryPatch: ModulePatch
     }
     
     [PatchPrefix]
-    private static void PatchPrefix(Player ___player, string ___C4ExplosiveId)
+    private static bool PatchPrefix(Player ___player, string ___C4ExplosiveId)
     {
-        IEnumerable<Item> items = ___player.Inventory.GetPlayerItems(EPlayerItems.Equipment);
+        DoorBreachComponent.Logger.LogInfo("[BackdoorBanditFika] RemoveItemFromPlayerInventoryPatch called.");
+
+        if (___player is not FikaPlayer fikaPlayer)
+        {
+            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] Player is not a FikaPlayer.");
+            return true;
+        }
+        
+        IEnumerable<Item> items = fikaPlayer.Inventory.GetPlayerItems(EPlayerItems.Equipment);
         Item foundItem = null;
 
         foreach (var item in items)
@@ -30,28 +39,35 @@ public class RemoveItemFromPlayerInventoryPatch: ModulePatch
             foundItem = item;
             break;
         }
-            
-        FikaPlayer coopPlayer = ___player as FikaPlayer;
+        
+        if (fikaPlayer == null)
+        {
+            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] fikaPlayer is null.");
+            return true;
+        }
 
-        if (coopPlayer == null)
-            return;
-            
-        InventoryController inventoryController = coopPlayer.InventoryController;
+        InventoryController inventoryController = fikaPlayer.InventoryController;
 
-        DoorBreachComponent.Logger.LogInfo($"Attempting to remove C4 from player inventory. Player ID: {coopPlayer.NetId}");
+        DoorBreachComponent.Logger.LogInfo($"Attempting to remove C4 from player inventory. Player ID: {fikaPlayer.NetId}");
 
-        if (foundItem == null) 
-            return;
+        if (foundItem == null)
+        {
+            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] foundItem is null.");
+            return true;
+        }
 
         DoorBreachComponent.Logger.LogInfo($"Removing C4 with ID: {foundItem?.Id} from player inventory.");
 
         GStruct153 discardResult = InteractionsHandlerClass.Discard(foundItem, inventoryController, true);
 
         if (discardResult.Failed)
-            return;
+        {
+            DoorBreachComponent.Logger.LogError("[BackdoorBanditFika] discardResult failed.");
+            return true;
+        }
 
-        inventoryController.TryRunNetworkTransaction(discardResult, null);
+        inventoryController.TryRunNetworkTransaction(discardResult);
+        
+        return false;
     }
-
-    
 }
