@@ -17,7 +17,7 @@ namespace DoorBreach
             MongoID weaponID = damageInfo.Weapon.TemplateId;
 
             //semi-pleb mode.  All regular doors are shootable any weapon except for reinforced doors
-            if (DoorBreachPlugin.SemiPlebMode.Value && 
+            if (DoorBreachPlugin.SemiPlebMode && 
                 material != MaterialType.MetalThin && 
                 material != MaterialType.MetalThick)
             {
@@ -52,10 +52,10 @@ namespace DoorBreach
 #endif
 
             //check if weapon is a shotgun and material type is metal
-            if (!DoorBreachPlugin.BreachingRoundsOpenMetalDoors.Value)
+            if (!DoorBreachPlugin.BreachingRoundsOpenMetalDoors)
             {
                 if (IsBreachingSlug(bulletTemplate) && 
-                    (material == MaterialType.MetalThin || material == MaterialType.MetalThick))
+                    material is MaterialType.MetalThin or MaterialType.MetalThick)
                 {
                     validDamage = false;
                     return;

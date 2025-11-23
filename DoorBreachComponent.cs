@@ -96,7 +96,7 @@ public class DoorBreachComponent : MonoBehaviour
             if (!IsValidObject(obj, ref invalidCount, ref inoperableCount, ref invalidLayerCount, interactiveLayer))
                 return;
 
-            int randHitPoints = Random.Range(DoorBreachPlugin.MinHitPoints.Value, DoorBreachPlugin.MaxHitPoints.Value);
+            int randHitPoints = Random.Range(DoorBreachPlugin.MinHitPoints, DoorBreachPlugin.MaxHitPoints);
             Hitpoints hitpoints = obj.gameObject.GetOrAddComponent<Hitpoints>();
                 
             hitpoints.hitpoints = randHitPoints;

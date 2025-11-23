@@ -2,8 +2,6 @@
 using System.Threading.Tasks;
 using DoorBreach.Patches;
 using BepInEx;
-using BepInEx.Bootstrap;
-using BepInEx.Configuration;
 using DoorBreach.Models;
 using Newtonsoft.Json;
 using SPT.Common.Http;
@@ -13,17 +11,17 @@ namespace DoorBreach
     [BepInPlugin("com.dvize.BackdoorBandit", "dvize.BackdoorBandit", "2.0.1")]
     public class DoorBreachPlugin : BaseUnityPlugin
     {
-        public static ConfigEntry<bool> PlebMode;
-        public static ConfigEntry<bool> SemiPlebMode;
-        public static ConfigEntry<bool> BreachingRoundsOpenMetalDoors;
-        public static ConfigEntry<bool> OpenLootableContainers;
-        public static ConfigEntry<bool> OpenCarDoors;
-        public static ConfigEntry<int> MinHitPoints;
-        public static ConfigEntry<int> MaxHitPoints;
-        public static ConfigEntry<int> explosiveTimerInSec;
-        public static ConfigEntry<bool> explosionDoesDamage;
-        public static ConfigEntry<int> explosionRadius;
-        public static ConfigEntry<int> explosionDamage;
+        public static bool PlebMode;
+        public static bool SemiPlebMode;
+        public static bool BreachingRoundsOpenMetalDoors;
+        public static bool OpenLootableContainers;
+        public static bool OpenCarDoors;
+        public static int MinHitPoints;
+        public static int MaxHitPoints;
+        public static int explosiveTimerInSec;
+        public static bool explosionDoesDamage;
+        public static int explosionRadius;
+        public static int explosionDamage;
         
         public static ModConfig ModConfig { get; set; }
         public static bool FikaInstalled { get; private set; }
@@ -39,93 +37,27 @@ namespace DoorBreach
         {
             ModConfig = await LoadFromServer();
 
-            PlebMode = Config.Bind(
-                "1. Main Settings",
-                "Plebmode",
-                false,
-                new ConfigDescription("Enabled Means No Requirements To Breach Any Door/LootContainer",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 5 }));
+            PlebMode = ModConfig.PlebMode;
 
-            SemiPlebMode = Config.Bind(
-                "1. Main Settings",
-                "Semi-Plebmode",
-                false,
-                new ConfigDescription("Enabled Means Any Round Breach Regular Doors, Not Reinforced doors",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 4 }));
+            SemiPlebMode = ModConfig.SemiPlebMode;
 
-            BreachingRoundsOpenMetalDoors = Config.Bind(
-                "1. Main Settings",
-                "Breach Rounds Affects Metal Doors",
-                false,
-                new ConfigDescription("Enabled Means Any Breach Round opens a door",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 3 }));
+            BreachingRoundsOpenMetalDoors = ModConfig.BreachingRoundsOpenMetalDoors;
 
-            OpenLootableContainers = Config.Bind(
-                "1. Main Settings",
-                "Breach Lootable Containers",
-                false,
-                new ConfigDescription("If enabled, can use shotgun breach rounds on safes",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 2 }));
+            OpenLootableContainers = ModConfig.OpenLootableContainers;
 
-            OpenCarDoors = Config.Bind(
-                "1. Main Settings",
-                "Breach Car Doors",
-                false,
-                new ConfigDescription("If Enabled, can use shotgun breach rounds on car doors",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 1 }));
+            OpenCarDoors = ModConfig.OpenCarDoors;
 
-            MinHitPoints = Config.Bind(
-                "2. Hit Points",
-                "Min Hit Points",
-                100,
-                new ConfigDescription("Minimum Hit Points Required To Breach, Default 100",
-                new AcceptableValueRange<int>(0, 1000),
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 2 }));
+            MinHitPoints = ModConfig.MinHitPoints;
 
-            MaxHitPoints = Config.Bind(
-                "2. Hit Points",
-                "Max Hit Points",
-                200,
-                new ConfigDescription("Maximum Hit Points Required To Breach, Default 200",
-                new AcceptableValueRange<int>(0, 2000),
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 1 }));
+            MaxHitPoints = ModConfig.MaxHitPoints;
 
-            explosiveTimerInSec = Config.Bind(
-                "3. Explosive",
-                "Explosive Timer In Sec",
-                10,
-                new ConfigDescription("Time in seconds for explosive breach to detonate",
-                new AcceptableValueRange<int>(1, 60),
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 4 }));
+            explosiveTimerInSec = ModConfig.ExplosiveTimerInSec;
 
-            explosionDoesDamage = Config.Bind(
-                "3. Explosive",
-                "Enable Explosive Damage",
-                false,
-                new ConfigDescription("Enable damage from the explosive",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 3 }));
+            explosionDoesDamage = ModConfig.ModExplosionStats.ExplosionDoesDamage;
 
-            explosionRadius = Config.Bind(
-                "3. Explosive",
-                "Explosion Radius",
-                5,
-                new ConfigDescription("Sets the radius for the explosion",
-                new AcceptableValueRange<int>(0, 200),
-                new ConfigurationManagerAttributes { IsAdvanced = false, Order = 2 }));
+            explosionRadius = ModConfig.ModExplosionStats.ExplosionRadius;
 
-            explosionDamage = Config.Bind(
-               "3. Explosive",
-               "Explosion Damage",
-               80,
-               new ConfigDescription("Amount of HP Damage the Explosion Causes",
-               new AcceptableValueRange<int>(0, 500),
-               new ConfigurationManagerAttributes { IsAdvanced = false, Order = 1 }));
+            explosionDamage = ModConfig.ModExplosionStats.ExplosionDamage;
 
             new ApplyHit().Enable();
             new ActionMenuDoorPatch().Enable();

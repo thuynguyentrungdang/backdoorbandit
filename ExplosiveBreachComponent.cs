@@ -258,7 +258,7 @@ public class ExplosiveBreachComponent : MonoBehaviour
 
     private static IEnumerator DelayedExplosion(Door door, Player player, C4Instance c4Instance)
     {
-        float waitTime = DoorBreachPlugin.explosiveTimerInSec.Value;
+        float waitTime = DoorBreachPlugin.explosiveTimerInSec;
         float timer = 0;
         float normalBeepInterval = 1.0f;  // Interval for normal beeping
         float rapidBeepStart = 5.0f;      // Time to start transitioning to rapid beeps
@@ -333,12 +333,15 @@ public class ExplosiveBreachComponent : MonoBehaviour
             c4Instance.LootItem.gameObject == null)
             return;
                 
-        effectsInstance.EmitGrenade("big_explosion", c4Instance.LootItem.transform.position, Vector3.forward, DoorBreachPlugin.explosionRadius.Value);
+        effectsInstance.EmitGrenade("big_explosion", 
+                                    c4Instance.LootItem.transform.position, 
+                                    Vector3.forward, 
+                                    DoorBreachPlugin.explosionRadius);
 
-        if (DoorBreachPlugin.explosionDoesDamage.Value)
+        if (DoorBreachPlugin.explosionDoesDamage)
         {
-            float explosionRadius = DoorBreachPlugin.explosionRadius.Value;
-            float baseDamage = DoorBreachPlugin.explosionDamage.Value;
+            float explosionRadius = DoorBreachPlugin.explosionRadius;
+            float baseDamage = DoorBreachPlugin.explosionDamage;
             Vector3 explosionPosition = c4Instance.LootItem.transform.position;
 
             Collider[] hitColliders = Physics.OverlapSphere(explosionPosition, explosionRadius);

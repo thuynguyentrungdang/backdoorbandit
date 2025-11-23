@@ -36,7 +36,7 @@ namespace DoorBreach.Patches
                     ExplosiveBreachComponent.StartExplosiveBreach(door, owner.Player);
                     ExplosiveBreachComponent.RemoveItemFromPlayerInventory(owner.Player);
 
-                    FikaBridge.SendPlantC4PacketPacket(owner.Player, door.Id, DoorBreachPlugin.explosiveTimerInSec.Value);
+                    FikaBridge.SendPlantC4PacketPacket(owner.Player, door.Id, DoorBreachPlugin.explosiveTimerInSec);
                 },
                 Disabled = !door.IsBreachAngle(owner.Player.Position) || !ExplosiveBreachComponent.IsValidDoorState(door) ||
                             !ExplosiveBreachComponent.HasC4Explosives(owner.Player)
