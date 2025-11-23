@@ -63,7 +63,7 @@ internal class ApplyHit : ModulePatch
         BallisticCollider collider = damageInfo.HittedBallisticCollider;
         if (collider == null) return; // Unity null-safe check
 
-        bool validDamage = DoorBreachPlugin.PlebMode.Value;
+        bool validDamage = DoorBreachPlugin.PlebMode;
 
         bool isCarTrunk = collider.GetComponentInParent<Trunk>() != null;
         bool isLootableContainer = collider.GetComponentInParent<LootableContainer>() != null;
@@ -86,10 +86,9 @@ internal class ApplyHit : ModulePatch
     private static void HandleCarTrunkDamage(DamageInfoStruct damageInfo, BallisticCollider collider,
         ref bool validDamage)
     {
-        if (!DoorBreachPlugin.PlebMode.Value && DoorBreachPlugin.OpenCarDoors.Value)
-        {
+        if (!DoorBreachPlugin.PlebMode && 
+            DoorBreachPlugin.OpenCarDoors)
             DamageUtility.CheckCarWeaponAndAmmo(damageInfo, ref validDamage);
-        }
 
         HandleDamage(damageInfo, collider, ref validDamage, "Car Trunk", (hitpoints, entity) =>
         {
@@ -101,13 +100,13 @@ internal class ApplyHit : ModulePatch
         });
     }
 
-    private static void HandleLootableContainerDamage(DamageInfoStruct damageInfo, BallisticCollider collider,
-        ref bool validDamage)
+    private static void HandleLootableContainerDamage(DamageInfoStruct damageInfo, 
+                                                    BallisticCollider collider, 
+                                                    ref bool validDamage)
     {
-        if (!DoorBreachPlugin.PlebMode.Value && DoorBreachPlugin.OpenLootableContainers.Value)
-        {
+        if (!DoorBreachPlugin.PlebMode && 
+            DoorBreachPlugin.OpenLootableContainers)
             DamageUtility.CheckLootableContainerWeaponAndAmmo(damageInfo, ref validDamage);
-        }
 
         HandleDamage(damageInfo, collider, ref validDamage, "Lootable Container", (hitpoints, entity) =>
         {
@@ -119,10 +118,11 @@ internal class ApplyHit : ModulePatch
         });
     }
 
-    internal static void HandleDoorDamage(DamageInfoStruct damageInfo, BallisticCollider collider,
-        ref bool validDamage)
+    internal static void HandleDoorDamage(DamageInfoStruct damageInfo, 
+                                        BallisticCollider collider, 
+                                        ref bool validDamage)
     {
-        if (!DoorBreachPlugin.PlebMode.Value)
+        if (!DoorBreachPlugin.PlebMode)
         {
             DamageUtility.CheckDoorWeaponAndAmmo(damageInfo, ref validDamage);
 
