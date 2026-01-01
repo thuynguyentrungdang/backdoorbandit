@@ -31,6 +31,7 @@ namespace DoorBreach.Patches
                     FikaBridge.SendPlantC4PacketPacket(owner.Player, door.Id, DoorBreachPlugin.explosiveTimerInSec);
                 },
                 
+                // TODO: IsBreachAngle null ref on prod setup 
                 Disabled = !door.IsBreachAngle(owner.Player.Position) || 
                            !ExplosiveBreachComponent.IsValidDoorState(door) ||
                            !ExplosiveBreachComponent.HasC4Explosives(owner.Player)
