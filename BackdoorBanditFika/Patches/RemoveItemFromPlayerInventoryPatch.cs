@@ -56,7 +56,7 @@ public class RemoveItemFromPlayerInventoryPatch: ModulePatch
             return true;
         }
 
-        Plugin.Logger.LogInfo($"Removing C4 with ID: {foundItem?.Id} from player inventory.");
+        Plugin.Logger.LogInfo($"Removing C4 with ID: {foundItem.Id} from player inventory.");
 
         GStruct153 discardResult = InteractionsHandlerClass.Discard(foundItem, inventoryController, true);
 

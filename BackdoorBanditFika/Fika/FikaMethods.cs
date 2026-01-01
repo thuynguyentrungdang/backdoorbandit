@@ -30,7 +30,7 @@ public class FikaMethods
         {
             netID = netId,
             doorID = doorID,
-            C4Timer = c4Timer,
+            C4Timer = c4Timer
         };
 
         if (FikaBackendUtils.IsServer ||
@@ -94,15 +94,17 @@ public class FikaMethods
 
     private static void OnTNTPacketReceived(PlantC4Packet packet, NetPeer peer)
     {
-        if (FikaBackendUtils.IsServer ||
-            FikaBackendUtils.IsHeadless)
+        if (FikaBackendUtils.IsServer)
         {
             Plugin.Logger.LogInfo(
                 "[BackdoorBanditFika] Forwarding Plant C4 Packet to all clients via FikaMethods from packet ID: " +
                 packet.netID);
+            
             // If the host receives the packet from a client, now forward this packet to all clients (excluding arg2 - the person who sent it).
             SendC4PlantPacket(packet.netID, packet.doorID, packet.C4Timer);
-            return;
+            
+            if (FikaBackendUtils.IsHeadless) 
+                return;
         }
         
         Plugin.Logger.LogInfo("[BackdoorBanditFika] Received Plant C4 Packet via FikaMethods from packet ID: " + packet.netID);
@@ -119,20 +121,23 @@ public class FikaMethods
         // We can cast this to a Door since we're sure only a Door type was sent
         Door door = (Door)worldInteractiveObject;
 
+        Plugin.Logger.LogInfo("[BackdoorBanditFika] Running StartExplosiveBreach on door ID: " + door.Id + " for player ID: " + player.NetId);
         // Run the method on the recipient of this packet
         ExplosiveBreachComponent.StartExplosiveBreach(door, player);
     }
 
     private static void OnSyncOpenStatePacketReceived(SyncOpenStatePacket packet, NetPeer peer)
     {
-        if (FikaBackendUtils.IsServer ||
-            FikaBackendUtils.IsHeadless)
+        if (FikaBackendUtils.IsServer)
         {
             Plugin.Logger.LogInfo(
                 "[BackdoorBanditFika] Forwarding Sync Open State Packet to all clients via FikaMethods from packet ID: " +
                 packet.netID);
+            
             SendSyncOpenStatePacket(packet.netID, packet.objectID, packet.objectType);
-            return;
+            
+            if (FikaBackendUtils.IsHeadless) 
+                return;
         }
         
         Plugin.Logger.LogInfo("[BackdoorBanditFika] Received Sync Open State Packet via FikaMethods from packet ID: " + packet.netID);
@@ -153,6 +158,8 @@ public class FikaMethods
         // Convert from int in the packet to the enum above
         // (Can't send an enum value as part of a packet, apparently)
         DoorBreachPlugin.GameObjectType gameObjectType = (DoorBreachPlugin.GameObjectType)packet.objectType;
+        
+        Plugin.Logger.LogInfo("[BackdoorBanditFika] Syncing open state for object ID: " + worldInteractiveObject.Id + " of type: " + gameObjectType);
 
         switch (gameObjectType)
         {
