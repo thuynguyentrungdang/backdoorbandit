@@ -335,8 +335,7 @@ public class ExplosiveBreachComponent : MonoBehaviour
                 
         effectsInstance.EmitGrenade("big_explosion", 
                                     c4Instance.LootItem.transform.position, 
-                                    Vector3.forward, 
-                                    DoorBreachPlugin.explosionRadius);
+                                    Vector3.forward);
 
         if (DoorBreachPlugin.explosionDoesDamage)
         {
